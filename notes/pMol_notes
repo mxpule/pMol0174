@@ -1,0 +1,993 @@
+wb93thCC
+
+Compiling problems
+
+To get KDevelop to work with Qt4
+export QTDIR=/usr/local/Trolltech/Qt-4.1.4
+export PATH=$QTDIR/bin:$PATH
+
+
+----------------------------------------------
+
+remember classes have to be designated as virtual for them to get references over inheritance
+----------------------------------------------
+
+To get XML files to compile and link I needed to add these to the make file:
+This to include
+
+
+This to link
+-L/usr/local/Trolltech/Qt-4.1.4/lib -lQtXml
+
+
+----------------------------------------------
+
+Design feature
+
+There will be three stacks:
+1. Object stack - this will contain molecular, enzymatic objects etc
+2. Visual stack - this will contain representations of plasmids, gels - the GUI stuff
+3. Output stack - designed primer lists, diagrams hopefully in an open document XML type format
+
+----------------------------------------------
+/////////////////////////////////////////////
+Command features
+
+ladder100		(collection of DNA sized 100 to 1000 in 100bp steps)
+SFG.eGFP		(plasmid from my archive)
+(EcoRI, NcoI)			(enzyme)
+digest
+SFG.eGFP
+EcoRI 
+digest
+dup(3)
+NcoI
+digest(0.75)
+flip(3)
+NcoI
+digest(0.5)
+flip(2)
+digest(0.25)
+
+rungel
+
+digests SF
+
+basic stack commands:
+pop(n)
+dup(n)
+flip(n)
+group(n)	if n is left out, groups all the similarly typed contiguous objects on the stack
+
+-----------------------------------------------
+SFG.eGFP->seg("eGFP")   (a little inelegent, let me think about this)
+sequence		sequence using default of 400bp spans and Tm of
+sequence(500)
+sequence(500,58)
+
+
+
+
+
+-----------------------------------------------
+SFG.eGFP 
+martinsenzymes
+nicedigest(4,1000)	
+
+
+-----------------------------------------------
+
+ObjectStackAtom
+what
+
+VisualStackAtom
+what
+
+OutputStackAtom
+what
+
+<disscussion>
+<name>Other DNA manipulation software</name>
+
+<section>
+  <name>CloneManager</name>
+  <comment>We know this pretty well</comment>
+</section>
+
+<section>
+  <name>VectorNTI</name>
+  <comment>I haven't used this, but from their screen shots - it looks pretty nice, much like clonemanager. Invitrogen are distributing this free (as in beer), but not open. Also it gives a gateway to order from them, proprietary format - wouldn't trust it for these reasons. Not language manipulated.</comment>
+</section>
+
+<section>
+  <name>DNAStridor</name>
+  <comment>This is original MAC software - it doesn't look like it has been updated too much going by a google search. Haven't seen this myself.</comment>
+</section>
+
+<section>
+  <name>DNAStar</name>
+  <comment>Very old programme</comment>
+</section>
+
+<section>
+  <name>Gene Construction Kit</name>
+  <comment>From TEXTCO. Never heard about it until I looked at the rebase website. Looks very simple and nice programme akin to clonemanager. Can visualize gels. Nothing new.</comment>
+</section>
+
+</discussion>
+
+//-----------------------------------------------
+
+<development>
+<name>Getting Restriction Enzyme Data from Rebase</name>
+
+</development>
+
+//-----------------------------------------------
+
+<development>
+<name>Reverse-engineering clone-manager files</name>
+<section><
+</development>
+
+<development>
+<name>Translation</name>
+<text>I want this software to be unbelievably universal and flexible. What if someone made their own codons? What if someone found a life-form on Mars who'se codon useage recognized 4 bases? On the otherhand, it is annoying if the system keeps asking you what codon table you want to use. More realistically, different codon tables could store different information about codon frequency for example
+
+<bullet>Called pMolCodonCodex</bullet>
+<bullet>name - e.g. homo Sapiens</bullet>
+<bullet>comment - e.g. downloaded from where-ever</bullet>
+<bullet>base - e.g. normally 3, unless Martian - 4</bullet>
+<bullet>codon
+
+
+
+//-----------------------------------------------
+
+Priorities for development
+- Nacsent visual representation
+- Nacsent command lines
+- command sequence
+- command pcrjoin
+
+-----------------------------------------------
+<report>
+<date>2006-07-22</date>
+<name>Log</name>
+<text>
+OK so we have fairly basic visual sequence-dump representation which is very nice to see.
+Also we have a primitive command line derived from a text editing Qt class- 
+and at least an idea how to make it behave better. We need to slow down on this project a bit
+so it would be nice to know what to do to get a minimally usefull programme for the cloning that
+I want to do.
+<task>Fix display bugs<done>2006-07-22</done></task>
+<bullet>Recursion doesn't see to be working - fix</bullet>
+<bullet>Scrolling on sequence dump</bullet>
+<bullet>ORF translation display</bullet>
+<bullet>Decide how to load up plasmid sequences i.e. from the command line</bullet>
+<bullet>Essential functions that we need
+  <bullet>pcrweld - join up plasmids by PCR</bullet>
+  <bullet>sequence - pop out primers for sequencing</bullet>
+</bullet>
+</text>
+</report>
+
+<report>
+<date>2006-08-03</date>
+<name>Log</name>
+<text>
+<p>After some thinking and much soul searching, I don't think it's a good idea to have that stack based 
+(post-script - like) command line system anymore. I think it's too obscure. A mathematic style input 
+may be a better way of doing it. Some kind of scripting language (yuk) is inevitable. There is a 
+language called lua which I found interesting and has a binding with C++. However, I would like to 
+have an incredibly simple scripting language based on some elements of C++.
+</p>
+<p>An important concession to the stack based system (again borrowed from Mathematica), is the idea of 
+not loosing output. A system like this:
+pMol00400> x = dsDNA("cagggttggacccgt"); generates a sequence of DNA and assigns its name to x
+pMol00401> dsDNA("cagggttggacccgt"); generates a sequence of DNA and assigns it to pmol00401.
+The namespace deals with these differently in that once the session is over, all temporary names are purged, 
+while anything assigned a proper variable name is saved. Can be assigned later with 
+pMol00402> y = pmol100401;
+
+</p>
+<p>Another philosophical approach is having other people write classes that can fit onto pMol, for
+instance exotic viewers, classes that can convert from ABI output for example. They can inherit all the
+older member functions.
+</p>
+<p>Here are some examples
+pMol00403> puleVS(SFG.eGFP);
+ok - this activates the pule molecular sequence viewer, also dumps the viewer object as pMol00403
+
+puleVM(SFG.eGFP); same thing but the map viewer.
+pMolInspector(SFG.eGFP);  universal object inspector
+
+OK so far...
+SFG.eGFP; 
+  dumps pointer (everything is a pointer) to dsDNA object on stack
+
+SFG.eGFP->eGFP;
+  dumps pointer to annotation eGFP of dsDNA object SFG.eGFP. 
+  Note, if you alter this, you also alter the parent molecule 
+
+SFG.eGFP->seg("accgaatc...","...ttacgacta");
+  dumps pointer to annotation segment of SFG.eGFP. In future incarnations 
+  if there are more than one of these sequences, it dumps out an array
+  with all the possibilities
+
+SFG.eGFP->seg("TYPRLGS...","...SGGSGGS");
+  looks through the molecules ORFs and does the same.
+  I would like by convention lower case to be DNA and upper to be protein
+
+SFG.eGFP->seg("aacctaggt");
+  looks through sequence for literal above. Returns array with segments referring to 
+  where these are found.
+
+SFG.eGFP->seg("aacctaggt")->count;
+  returns how many times this was found.
+
+SFG.eGFP->seg(EcoRI);
+  returns array with EcoRI sites. Important difference between above line and this, in that
+  the returned array contains recs (Restriction endonuclease cleavage site) 
+
+SFG.eGFP->find(EcoRI)->count;
+  counts how many EcoRI sites are present
+
+SFG.eGFP->annotate(SFG.eGFP->find(EcoRI));
+  annotates 
+
+SFG.eGFP->annotate(SFG.eGFP->find(EcoRI)[1]);
+  annotates first EcoRI site only.
+
+SFG.eGFP->temp->annotate(SFG.eGFP->find(EcoRI,BamHI,NotI));
+  annotates EcoRI, BamHI, NotI sites on SFG.eGFP on layer "temp"
+
+//I haven't a clue how to direct creation of layers!
+
+view = puleVM(SFG.eGFP);
+view->highlight->temp;
+  highlights layer temp on this view! cool!
+
+SFG.eGFP->temp->EcoRI->delete;
+  deletes all EcoRI sites on layer temp
+
+SFG.eGFP->EcoRI->delete
+  deletes ALL EcoRI sites
+
+SFG.eGFP->temp->*->delete
+  deletes all annotations on layer temp
+
+//----------------
+aside - structure of dsDNA
+  sequence
+  layers
+  segs
+    can be recs, annotation, orf, 
+    future do other things like snp, splice
+//---------------
+
+PCRfuse(DNA("accaccacc",EcoRI->sequence,SFG.eGFP->eGFP, NotI->sequence, "tccctccctccct");
+  Generate by PCR a segment of DNA cool!
+
+PCRfuze(DNA("accaccacc"),EcoRI->sequence,pTOPO.R5041->segment("AYTPRR...","...PTTYYP"),HumanCodonCodex->convert(peptide("SGGGSGGGSGGGS")),SFG.HA1TCR->Vh,BamHI->sequence,DNA("accaccacc"));
+  oh Mama way cool!!!
+
+t1 = MartinsEnzymes->filter(e,(!e->sensitiveDCM) && ! (e->sensitiveDAM) && SFG.eGFP->find(e)->count == 1 && SFG.eGFP->eGFP->find(e)->count == 0);
+  find enzymes that I have which are not sensitive to dcm or dam cut only once in my construct and not in eGFP!!! way cool!
+
+pMolInspector(t1);
+  lets look at the list
+
+t2 = MartinsEnzymes->filter(e,(!e->sensitiveDCN) && ! (e->sensitiveDAM) && pTOPO.eGFP->seqment(300,600)->find(e)->count == 1);
+pMolInspector(t2);
+
+t3 = t1->filter(e, t2->contains(e));
+pMolInspector(t3);
+//need a way to dump a pair of enzymes because this may have a solution with compatable ends
+
+
+filtered = MartinsEnzymes->filter(e, (!e->sensitiveDCM) && (!e->sensitiveDAM));
+
+t4 = filtered->filter(e, SFG.eGFP->segment(1500,1600)->find(e)->count == 1);
+pMolInspector(t4);
+
+
+
+QString parseSegment(QString* s, int* returnCode)
+{
+  trim
+  if s->startsWith("(")
+
+  if s->startsWith(")")
+
+  if s->startsWith("->")
+  if s->char(0) == 
+
+
+pMolCmd* parseError(const QString &errorMsg, QString* cmdStr)
+{
+  pMolCmdError* error = new pMolCmdError(errorMsg);
+  return (pMolCmd*) error;
+}
+
+pMolCmd* parseName(cmdStr)
+{
+  pMolCmdName* name = new pMolCmdName(segmentParse(cmdStr));
+  name->child = parsePostName(cmdStr);
+  if (name->child->type==pMolCmd::error) return name->child;
+  return (pMolCmd*) name;
+};
+
+///parse command line after "->" expecting name anything else is an error
+pMolCmd* parseChild(QString* cmdStr)
+{
+  segmentParse(cmdStr); 		// pop of the "->"
+  int code code = segmentCode(cmdStr);
+
+  if (code==param_name) return parseName(cmdStr);
+
+  return parseError("was expecting a child object name after "->",cmdStr);
+};
+
+///parse command line, expecting follow-on from an object name
+///i.e. we are expecting subcommands or parameter but nothing else
+///not necessarily an error, e.g. a ")" etc, but anything else end this object
+pMolCmd* parsePostName(QString* cmdStr)
+{
+  int code = segmentCode(cmdStr);
+
+  if (code==param_null)         return NULL;		// end of input reached, this could still be ok
+  if (code==param_terminate)	return NULL;
+
+  if (code==param_open_round)   return parseList(str); 	// looks like a parameter list so go for it
+
+  if (code==param_child)	return parseChild(str);	// looks like a subobject, so go for it
+
+  return parseError("something wierd here happened after ->", cmdStr);
+}
+
+
+///round brackets have been open, put next stuff in a list!
+///separated by ","
+pMolCmd* parseList(QString *cmdStr)
+{
+  segmentParse(cmdStr);								// pop off the "("
+  int code = segmentCode(cmdStr); 
+  QString seg = segmentParse(cmdStr);
+  pMolCmdList* list = new pMolCmdList();
+
+  while (code!=param_close_round)
+  {
+    pMolCmd* next = parseGeneral(cmdStr);
+    if (next==NULL) return parseError("terminated before list end");
+    if (next->type==pMolCmd::error) return next;
+
+    list->add(next);
+
+    code = segmentcode(cmdStr);
+    if ((code==param_comma) || (code==param_close_round)) segmentParse(cmdStr);
+    else return parseError("expecting ',' or ')'");
+  };
+  return (pMolCmd*) list;
+};
+
+
+
+///parses anything much really
+pMolCmd* parseGeneral(QString *cmdStr)
+{
+  int code = segmentCode(cmdStr);
+  if (code==param_null) return NULL;
+  if (code==param_term) return NULL;
+
+  if (code==param_string) return parseString(cmdStr);
+  if (code==param_number) return parseNumber(cmdStr);
+
+  if (code==param_name)   return parseName(cmdStr);
+
+  if (code==param_open_round)  return parseList(cmdStr);
+
+  return parseError("I don't know what this is");
+};
+
+
+//------------------------------------------------------
+<report>
+<date>08-08-2006</date>
+<name>log</name>
+<text>
+The command structure above worked beautifully. I also attached the object inspector methods to it so that you could inspect the structure of the command. Next, I moved on to execution and I encountered a problem. I was tempted to use the pMolCmd objects to perform the interpretation directly since it would be easy to make a virtual function (interpret). Unfortunately, while the simple classes and even the list class can do this fine, the name class pMolCmdName needs to do a namespace lookup, also needs to return a cmd back to the namespace creating a circular defenition problem
+The options to solve this are:
+1. Pass a function as a parameter to the pMolCmd objects - this is a real low level hack, I worry that t
+2. Let the pMolCmdName class upcast pMolKernelInterface into some interface class that can pass pMolCmd
+3. Put all the ugliness into the kernel
+4. Create some wierd class called creator so that pMolCmd never has to pass a cmd back through kernelInterface - just names to the name space
+</text></report>
+//-----------------------------------------------------
+<report>
+<data>2006-08-09</date>
+<name>log</name>
+<text>
+OK with lots of good old sellotape and casting upwards I managed to get the thing to mostly work. Also created a simple text viewer called rawSeq to check what's happening. Not very pretty but works <br>
+The final phase I hope before I can use this needs the following<br>
+1. Melting temperature. I looked at the melting.c and despite the code looking horrendous, it is actually quite simple. Calculate entropy and enthalpy of heterduplexes in sequence and of each of the ends (look up table derived experimentally) and then a simple formula calculates it. For sequences longer than 60 there is a crude approximation. There are quite a few parameters - for instance salt conc, primer conc etc. I think it might be easiest to make a class say called pMolPCRengine which we can then populate via XML with the look-up table and the 
+2. Get an ORF class to work
+3. Get the visual sequence dump to work
+4. Make a method in pMOLPCREngine which can take two or three parameters and fuse together
+
+<?--
+<pMolPCRengine>
+<name>pcr</name>
+<comment>Martin Pule's PCR engine. Derived from MELTING v4.2 and heteroduplex parameters used are from all97a</comment>
+<hybridationType>DNA-DNA</hybridationType>
+<saltConcentration>???</saltConcentration>
+<saltCorrectionMethod>san98a</saltCorrectionMethod>
+<nucleicAcidConcentration>???</nucleicAcidConcentration>
+
+<hybridationTable>
+  <name>Allawi and SantaLucia. Biochemistry 36 : 10581-1059</name>
+  <comment>the parameters appearing in literature (and therefore in this table) are expressed in cal.mol-1, whereas the results output by MELTING are in SI, i.e. in J.mol-1</comment>
+
+  <duplex><pair>AA</pair><enthalpy> -7900.0</enthalpy><entropy>-22.2</entropy></duplex>
+  <duplex><pair>AC</pair><enthalpy> -8400.0</enthalpy><entropy>-22.4</entropy></duplex>
+  <duplex><pair>AG</pair><enthalpy> -7800.0</enthalpy><entropy>-21.0</entropy></duplex>
+  <duplex><pair>AT</pair><enthalpy> -7200.0</enthalpy><entropy>-20.4</entropy></duplex>
+  <duplex><pair>CA</pair><enthalpy> -8500.0</enthalpy><entropy>-22.7</entropy></duplex>
+  <duplex><pair>CC</pair><enthalpy> -8000.0</enthalpy><entropy>-19.9</entropy></duplex>
+  <duplex><pair>CG</pair><enthalpy>-10600.0</enthalpy><entropy>-27.2</entropy></duplex>
+  <duplex><pair>CT</pair><enthalpy> -7800.0</enthalpy><entropy>-21.0</entropy></duplex>
+  <duplex><pair>GA</pair><enthalpy> -8200.0</enthalpy><entropy>-22.2</entropy></duplex>
+  <duplex><pair>GC</pair><enthalpy> -9800.0</enthalpy><entropy>-24.4</entropy></duplex>
+  <duplex><pair>GG</pair><enthalpy> -8000.0</enthalpy><entropy>-19.9</entropy></duplex>
+  <duplex><pair>GT</pair><enthalpy> -8400.0</enthalpy><entropy>-22.4</entropy></duplex>
+  <duplex><pair>TA</pair><enthalpy> -7200.0</enthalpy><entropy>-21.3</entropy></duplex>
+  <duplex><pair>TC</pair><enthalpy> -8200.0</enthalpy><entropy>-22.2</entropy></duplex>
+  <duplex><pair>TG</pair><enthalpy> -8500.0</enthalpy><entropy>-22.7</entropy></duplex>
+  <duplex><pair>TT</pair><enthalpy> -7900.0</enthalpy><entropy>-22.2</entropy></duplex>
+
+  <end><base>A</base><enthalpy>2300.0</enthalpy><entropy> 4.1</entropy></end>
+  <end><base>T</base><enthalpy>2300.0</enthalpy><entropy> 4.1</entropy></end>
+  <end><base>G</base><enthalpy> 100.0</enthalpy><entropy>-2.8</entropy></end>
+  <end><base>C</base><enthalpy> 100.0</enthalpy><entropy>-2.8</entropy></end>
+
+</hybridationTable>
+</pMolPCRengine>
+
+--?>
+
+to make it as fast as possible and because I started off as a games programmer when younger - I will do it as a lookup table
+double entropy[16];
+double enthaply[16];
+double end[4];
+
+
+///go through the string for Tm calculations and convert it so that duplexes can easily be changed into
+///a look-up table index. So 'A' becomes 0, 'C' becomes 1, 'G' becomes 2, 'T' becomes 3.
+bool pMolDNAengine::convertToByte(const QString &s, short int[]* buffer)
+{
+  short int flatten[20] = (00,-1,-1,01,-1,-1,02,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,03);
+
+  for (int i=0, i<s.length(), i++)
+  { int j = s.at(i).unicode() - 65;
+    if ((j<0) || (j>20)) return false;
+    if ((int t=flatten[j])<0) return false;
+    buffer[i] = t;
+  };
+  return true;
+}
+
+pMolDNAengine:melting(pMolKernelInterface* interface, const QString &s)
+{
+  //prepare for calculation
+  int length = s.length();			// for speed
+  new short int buffer[s.length()];
+  if (!convertToByte(s, &buffer))
+  { interface->msg("pMolDNAengine::non-standard character in sequence, can't calculate Tm");
+    delete buffer;
+    return;
+  }
+
+ //Calculate the entropy from the ends
+  int j = buffer[length];
+
+  TotalEntropy  = 0.0;
+  TotalEntropy+ = entropyEnd[buffer[0]];
+  TotalEntropy+ = entropyEnd[buffer[length]];
+
+  //calculate the enthalpy from the ends
+  TotalEnthalpy = 0.0;
+  TotalEnthalpy+= enthalpyEnd[buffer[0]];
+  TotalEnthalpy+= enthalpyEnd[buffer[length]];
+
+  //calculate both for each duplex
+  for (int i=0, i<length-1, i++)
+  { int j = buffer[i]<<2 + buffer[i]+1;
+    entropy+ = entropyDuplex[j];
+    enthaply+= enthaplyDuplex[j];
+  }
+
+  //work out salt correction
+  double saltCorrection;
+
+  if (saltCorrectionMethod=="wet91a") 
+  { saltCorrection = 16.6 * log10 (saltConcentration/(1.0 + 0.7 * saltConcentration)) - 269.32; } 
+
+  else if (saltCorrectionMethod=="san96a") 
+  { saltCorrection = 12.5 * log10 (saltConcentration) - 273.15; }  
+
+  else if (saltCorrectionMethod=="san98a") 
+  { saltCorrection = -273.15; totalEntropy += 0.368 * (length-1) * log (saltConcentration); } 
+
+  else 
+  { interface->msg("pMolPCRengine::salt Correction method not known"); delete buffer; return NULL; };
+
+  //calculate Tm
+  double Tm = totalEnthalpy/(totalEntropy + 1.987 * log(nucleicAcidConcentration/pst_param->d_gnat)) + saltCorrection;
+
+  delete buffer;
+};
+
+</text>
+</report>
+//-------------------------------------
+<report>
+<date>10-08-2006</date>
+<text>
+OK, the pMolPCRengine is up and seems to be running (nominally at least) and the viewer is on-line triggered by command mpSV for Martin Pule sequence viewer. The pMolORF class is created but is not framing correctly - but huge advances, almost there. mpSV does look a bit clunky - will need work with colours etc.<br>
+Things to do:
+- make fuse method in pMolPCRengine
+- get the ORF to work properly
+- test the melting temperature works ok and connect it as a command
+- get pMolRestrictionEndonuclease
+The latter is a low priority relatively, but it's 2:00, I'm just back from UCH on-call to see some sickler who needs and exchange and my mind is number suitably.
+
+will also write a php script to make these files directly from reBase's downloads
+
+<pMolRestrictionEndonuclease version=1.0>
+<name>EcoRI</name>
+<comment>This is a great enzyme</comment>
+<sourceOrganism>E.coli RY13</sourceOrganism>
+<reference>R.N.Yoshimori</reference>
+<recognitionSite>CAATTG</recognitionSite>
+<cleavesPositive>1</cleavesPositive>
+<cleavesNegative>1</cleavesNegative>
+<damMethylationSensitive>false</damMethylationSensitive>
+<dcmMethylationSensitive>false</dcmMethylationSensitive>
+<CpGMethylationSensitive>true</CpGMethylationSensitive>
+<bufferActivity><name>NEB1></name><activity>100</activity></bufferActivity>
+<bufferActivity><name>NEB2></name><activity>100</activity></bufferActivity>
+<bufferActivity><name>NEB3></name><activity>100</activity></bufferActivity>
+<bufferActivity><name>NEB4></name><activity>100</activity></bufferActivity>
+<vendor><name>NEB</name><catalogueReference>R0101</catalogueReference></vendor>
+<vendor><name>Promega</name><catalogueReference></catalogueReference></vendor>
+</pMolRestritionEndonuclease>
+
+
+</report>
+
+//-------------------------------------
+<report>
+<date>11-08-2006</date>
+<text>
+OK the pMolRestrictionEndonuclease class exists and loads up its stuff just fine. 
+I need to write an SQL script that strips data off ReBase and puts to SQL and on to XML (I think this is the best way since the ReBase one isn't complete - i.e. dam,dcm and buffer info.
+Now:
+- link up melting to the kernel and start testing
+- fix the ORF thingy
+- move on to exciting things like digest and ligate
+<?-code
+find(pMolKernelInterface* interface, 
+
+?>
+</report>
+
+<report>
+
+**melting now correlates very well with IDTdna's one, had to change the salt and the oligo concentration to what their default is, also a very nasty bug in the melting temp algorithm where buffer[length] should have been buffer[length-1].
+
+
+
+
+
+
+
+So how do we search for degenerate matches? Using binary or of course
+  C G T A  dec ascii index
+A 0 0 0 1   1    65    0  x
+T 0 0 1 0   2    84   19  x
+G 0 1 0 0   4    71    6  x
+C 1 0 0 0   8    67    2  x
+R 0 1 0 1   5    82   17  x
+Y 1 0 1 0  10    89   24
+W 0 0 1 1   3    87   22  x
+S 1 1 0 0  12    83   18  x
+M 1 0 0 1   9    77   12  x
+K 0 1 1 0   6    75   10  x
+H 1 0 1 1  11    72    7  x
+B 1 1 1 0  14    66    1  x
+V 1 1 0 1  13    86   21  x
+D 0 1 1 1   7    68    3  x
+N 1 1 1 1  15    78   13  x
+
+// 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+   1,14, 8, 7,-1,-1, 4,11,-1,-1, 6,-1, 9,15,-1,-1,-1, 5,12, 2,-1,13, 3,-1,10
+http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html
+3.1. Guanine, adenine, thymine, cytosine: G, A, T, C
+3.2. Purine (adenine or guanine): R
+3.3. Pyrimidine (thymine or cytosine): Y
+
+
+3.4. Adenine or thymine: W
+
+3.5. Guanine or cytosine: S
+
+
+
+3.6. Adenine or cytosine: M
+
+
+3.7. Guanine or thymine: K
+
+
+
+3.8. Adenine or thymine or cytosine: H
+
+
+3.9. Guanine or cytosine or thymine: B
+
+
+3.10. Guanine or adenine or cytosine: V
+
+
+3.11. Guanine or adenine or thymine: D
+
+Not-C as above (section 3.8).
+
+3.12. Guanine or adenine or thymine or cytosine: N
+
+</report>
+
+//-------------------------------------
+<report>
+<date>14-08-2006</date>
+<text>
+MP sequence viewer ORF working fine now.
+There is a but with the mpSV with get Sequence when it is a child molecule (returns too long)
+
+The melting temperature and badness seem to be working perfectly
+You can check the melting temperature
+pMolPCRengine->sequence is working although I want to change it so that
+1). It outputs an external reference to the molecule, annotations can be swapped if user wants to (otherwise map gets cluttered)
+2). If it's a child molecule to make flanking primers and to output an annotation with the flanking regions
+pMolPCRengine->fuse is giving funny references for primers - needs some work
+
+pMolCodonCodex
+isn't translating ggg(G) properly!
+
+need to get arrays accessible with [] notation
+
+pMolRestrictionEndonuclease is correctly finding sites 
+have to design cutting and ligating today then that's all for now folks
+
+//-------------------------------------
+
+<date>15-08-2006</date>
+<version>25</version>
+<text>
+getting hysterical now. This bloody programme. Digesting logic is an absolute nightmare with annotations that can go in different directions and loop around the origin of a circular plasmid. A tangle of logic. Have a look at diagram mad.gif. There must be a simple way of doiong this. 
+
+I have re-jigged the molecular representations so that index is absolute and annotations / ORFs etc sense have positivie legnths and the otherway round. This makes some things easier but the arithmetical logic is painful. Getting the sequence viewer to work again was hard, still not perfect with the last line of sequence. Still doesn't annotate
+
+I have put in naming which is absolutely coolness itself and a nominal way of getting stuff from arrays member(x,1). I want to be able to do this with square brackets but the member() works for now.
+
+Sequencing seems to be robust although I can't see the reverse primers on the map since I haven't implement this yet.
+
+pcr->fuse is getting there almost works.
+
+Digestion works but all the annotations seem to get lost.
+
+//-------------------------------------
+<date>16-08-2006</date>
+<version>26</version>
+naming works fine, almost reached real usefullness
+
+I will put in a wishlist here for future reference
+- terminal opens up straight away			X
+- terminal is bigger					X	
+- terminal says something cool on startup		X
+- basic file commands or can put up a file browser!
+- a remove or drop command so I can reload stuff
+- an exit command that just closes everything		X
+- some way of closing all windows except terminal
+  a command like "silence"
+- some way of saving useful things                      X
+- some way of peeling off primer sequences in a nice
+  text format						X
+- very gentle undulation of background tones in the
+  mpSV viewer so the eye can easily see whic annotation
+  belongs to which sequence.				X
+- Reverse annotations					X
+- Little notches demarkating the beginning and ends
+  of annotations with arrows for directional ones       X
+- Some way of transferring data into our lab book
+  automatically
+- some central concept of archives or versions of 
+  objects that don't change so we can refer to them
+  in the lab book.
+- command pcr->mutateSOE(plasmid->ORF->mutate("ggtyygyga","gyyggga"), martinsEnzymes)
+- adjust pMolPCRengine->sequence to one-half turn so primers are out of phase               X
+- when two reverse annotations collide they are moved up (into the sequence) rather than down.
+- if a pMolORF is viewed in isolation, translation comes up automatically		X
+
+//-----------------------------------------------
+<report>
+<date>18-08-2006</date>
+Able to annotate reverse, put in "primer" style annotation with arrows. Annotation in reverse is nice being upside-down on the reverse side of the sequence. Can save. PCR->fuse is fixed and is working fine.
+The ligations stuff still crashes. Can now save files.
+</report>
+//-----------------------------------------------
+<report>
+<date>19-09-2006</date>
+Major theoretical breakthrough - fascinating idea that will take this fairly mundane software to the next level. We can make the following types of objects:
+<li>real</li>
+<li>virtual</li>
+<li>abstract</li>
+Real objects contain sequence data and actually EXIST as real DNA. Virtual objects contain sequence data but don't exist as real DNA. Abstract objects have no fixed real sequence data, for example if an amino acid sequence with a particular codonCodex is inserted, it has no definite DNA sequence.
+<br>
+The magic is after you've assembled your virtual or abstract molecule, you then ask pMol to turn it into a real one. You give it a PCR engine and a list of enzymes it can use and off it goes. It hunts for real DNA in your archive, it tries to stick bits in with enzymes, tries making small bits of DNA synthetically. It will even hunt in EST clone archives and genomic DNA sequences for literal sources ending with suggesting synthetic DNA only when absolutely necessary and kindly suggesting the fragments to order if you need to! You are left with the pleasure of designing your construct and leave it to pMol to work out how to generate it.
+</report>
+
+<report>
+pMolLayer has been created to transparently add detail
+command ->add(pMolElement) also working
+pMolORF->seg(peptide('p')) working like a dream
+</report>
+
+//-------------------------------------------------
+<report>
+<date>2006-08-28</date>
+This is a bit of a state-of-the-union address! pMol is working very nicely now. Quite impressive and usful already. I have written a PhP script to get restriction endonuclease data from EMBOSS and embelish it from NEBs website and put it into an SQL database and then to XML - all the restriction endonucleases exist now! Ligation still isn't working, I'm not convinced that I need it just yet since what I need mostly now is a whole lot of SOE PCR work. The fuzzy 3' end of fuse needs to be implemented.
+<P>
+Of perhaps most significance I have got Qt to talk with mySQL. More than that, I've got Qt to very easily talk to a mySQL database on my pair.com server! I've thought alot about it and I think the way forward is to store all the data on distributed SQL server. This will allow many beautiful things to happen - instantaneously moving from one terminal to another, complex versioning of constructs (e.g. static versions), connections of meanings will be easier, multiple namespaces, distribution between labs... This will add a new dimension to the whole thing - having all the data on a crappy file-server doesn't sound so good. The digital lab book I'm planning to write will also me mySQL based!
+<P>
+Also, Qt4.2 release will have a new QCanvas type class - will convert mpSV to that, and will wait until this release to write mpMV (the map viewer).
+<P>
+For the time being, I will implement the fuzzy 3' end on PCRengine->fuse and also make a primer stripping function which will strip primer sequences, test them agains the database to make sure they don't already exist and assign the MP numbers and enter them onto the database!
+</report>
+
+
+//-------------------------------------------------
+
+<report>
+<date>2006-09-01</date>
+In real-world use now, designed several constructs. Clearly superior to any other similar software that already exists. I have made a simple class called pMolBatch which allows storing lists of commands to sequentially execute them. Has been useful in making complex constructs. 
+<P>
+Codon optimization segment built - probably needs to be in a different class - can ->create(peptide('martinp*')) for instance, or ->wobble(peptide('martinp*')) which gives two (almost) optimal but distinct codings and ->wobble(orf(dna('cagtgtgctgatgctgctgtaa'))) which gives as optimal a wobble distinct from the given sequence as much as possible. Implementation is pretty poor. Lab book entry about this, nice to have even this basic bit! Nice that the sequence view can show the "badness" of a codon. I must change this to be able to show other stuff too like hydrophobicity or charge.
+<P>
+Some things are a pain, like having to modify annotations in the raw XML! putting in restriction sites in. Typing in long names...
+<P>
+I will think about how to enter constructs into mySQL database, and how to make snapshots of them. That is one simple thing I will slowly work on. Should make it very nice to work with and very easy to move from one terminal to another.
+<P>
+<idea>If we have a "jobs" table in the SQL server, when other servers are syncing - they can run the jobs and participate in a distributed way to do things like codon optimization etc</idea>
+<P>
+Basic restriction enzyme stuff exists, but we need to make list processing a bit better, so at least we can ask simple questions like which restriction enzyme only cuts once and not in this are for instance.
+<P>
+Better graphic routines are needed - especially the ability to click on annotations, make them longer etc I will wait until the proper version of Qt4.2 comes out - no point wasting time now on a buggy technology preview (they recommend only messing around with this).
+<P>
+some of the protein routines (like DAS) have been open sources - it would be nice to be able to plug them in - very complex code, I don't want to understand it. Should make an interface through which these kind of programs can be talked to
+<p>
+biojava seems pretty crap to be honest. The NCBI has some horrendomonstrously complex C++ library. They have a book about it online. It would be nice one day to pop in and out of this interface to pull out sequences and blast. Must look at this in future but not now.
+</p>
+<li>upload molecules to data base, options for fluid and snapshot objects</li>
+<li>some convenience operators e.g. HomoSap* instead of HomoSapiensCodonCodex...</li>
+<li>some more restriction endonuclease functionality</li>
+</report>
+//-------------------------------------------------
+<report>
+<date>2006-09-15</date>
+Have done several complex pcr builds with pMol, including NF-AT mutants. Working very well. The main problem I had is the lack of a simple way of storing all the builds in a logical way so I can look at them again easily in future. Naming and storing constructs and derivitives in SQL, that's the next challenge.</P>
+<P>
+I found that the code for loading chromatograph files from the Staden package (MRC) was written in c!!! It's really terribly written code but after about an hour of butchering it into pMol, I got the ABI bit to compile and it reads an ABI file into a simple struct called "read". Surprisingly, plotting a trace from an ab1 file through this worked very easily and a new class pMolTraceAbi exits!!! It should be relatively easy to butcher in the rest of the file formats. Ultimately, it should be re-written as a base clase pMolTrace and children pMolTraceAbi and other formats with the data structure and basic io in the base class. Nice however, to be able to just have this capability with minimal work, especially since after next week's cloning I should have a lot of sequences to check. I must design some mechanism of attaching / tagging these raw sequence files to a "real sequence". For instance, if I have a virtual class, clone it, have 6 minipreps which I sequence with 8 reactions for each, decide that #1 and #3 are good and go on from there, or perhaps the lab book should have links to this data...</P>
+<P>
+I need a good gene synthesizer now that I'm making the TCR logical OR gate. I need to codon-wobble Zeta and CH2CH3. 
+
+find . -exec grep  "read_sections" '{}' \; -print
+traceAbi('abi.ab1')
+primerOrder('NAME LIKE "%seq%" AND NAME LIKE "%NF-AT%" AND ixix>1800')
+
+n:=MartinsSynthHuman->synth(peptide('martin'),HomoSapiensCodonCodex)
+n:=synth3->synth(peptide('sssss'),HomoSapiensCodonCodex)
+f:=synth5->synth(peptide('gggggggg'), HomoSapiensCodonCodex)
+
+//--------------------------------------------------------------------
+
+<report>
+Splicing - taken from terrible code written by TIGR incorporated and seems to be working
+</report>
+
+//--------------------------------------------------------------------
+
+<report>
+Fragmentation algorithm written - very simple but it was a pain to debug, quite well commented should we need to go back to it.
+</report>
+
+//--------------------------------------------------------------------
+<report>
+<date>2006-11-02</date>
+
+Working hard on pMolSyntheticEngine - stuck on this bit of scoring % GC
+
+I'm a poor mathetmatician - in a nutshell the problem is thus:
+
+for each base over the baseContentThreshold there is a penalty. The higher up the order the base, the higher the score
+
+Imagine the penalty function for an individual base is 
+f(x) = p_lin*x^p_log
+
+Imagine a segment 10 bases long with 3 over the threshold
+1 base at 1 penalty = 1 x f(1) = 1
+1 base at 2 penalty = 2 x f(2) = 4
+1 base at 3 penalty = 3 x f(3) = 9
+Total = 14
+
+Imagine a segment 100 bases long with 30 over the threshold
+10 bases at 1 penalty = 10 x f(1) = 10
+10 bases at 2 penalty = 10 x f(2) = 40
+10 bases at 3 penalty = 10 x f(3) = 90
+Total = 140
+
+To calculate this we will integrate f(x) = p_lin*x^p_log
+penalty(x) = p_lin*x^(1 + p_log))/(1 + p_log)
+
+What I don't want to happen is this 100 base segment to be scored thus:
+1 base at 1 penalty = 1
+1 base at 2 penalty = 4
+
+1 base at 30 penalty = 900
+Total = huge!
+
+solution - send in deltaPercent and work out penalty as
+
+badness = penalty(deltaPercent)*length/100
+</report>
+
+//--------------------------------------------------------------------
+
+<report>
+<date>2006-11-05</date>
+pMolsyntheticEngine is working at a basic level with:
+* codon Optimization
+* repeated bases scoring
+* base content scoring
+* wobbling from a given sequence
+
+Still needs a bit of work, but I think it's good enough to get going with for now.
+
+I can't invest more time in it at present. The bits that aren't there yet are:
+* hairpin loop scoring
+* The global stuff:
+* * repeats
+* * connecting up the splicing acceptor
+* masking
+* forbidden sequences
+
+but some of this stuff I can do by hand for now
+
+Simple thing for now is to 
+*make the fragmenter duplicate a sequence and output this duplicate with 
+two layers: *assembly *hybridization_units
+
+*before ordering any oligos double check the translation!!!
+**checked with paranoid.pMol which has all codons**
+</report>
+
+ENST00000361719
+e1->test('ENST00000361719')
+
+pMol:Obj:>hello, this is pMol version 0.79 -
+pMol:Obj:>let's create something together.
+pMol:Obj:>p:=e1->test('ENST00000334409')
+pMol:Obj:>mpSV(p,p->orf)
+pMol:Obj:>q:=e1->test('ENST00000361719')
+pMol:Obj:>mpSV(q,q->orf)
+pMol:Obj:>x:=(1,2,3,4)
+pMol:Obj:>x->member(0)
+pMol:Obj:>x:=(p,q)
+pMol:Obj:>hInsp(x->member(0))
+pMol:Obj:>cd28:=e1->test('ENST00000340642')
+pMol:Obj:>mpSV(cd28)
+pMol:Obj:>mpSV(cd28->orf)
+pMol:Obj:>g2:=SFG.14g2a-CD28-Zeta
+pMol:Obj:>mpSV(g2)
+pMol:Obj:>b:=BamHI->find(g2)
+pMol:Obj:>1
+pMol:Obj:>g2->add(b->BamHI)
+pMol:Obj:>
+
+x:=synth15->rtrans(FLuc_tisi_red, HomoSapiensCodonCodex)
+
+//----------------------------------------------------------
+
+at last got a chance to write a better graphical representation of sequence using Qt's graphic view
+
+Problems:
+1. Wrapper, elegent way to
+
+2. space-fitting
+
+Looks great can do object->pdf('/home/mxpule/wow')
+
+Bugs
+1. Leaving annotations out [X]
+2. Loading dependencies [X]
+3. ORF ends placed haywire [X]
+4. Re-sizing / deleting QGraphicsItems [X]
+5. Re-wrapping if object gets modified [ ]
+6. Saving [ ]
+7. Some way of changing colours etc [ ]
+8. Make text rendering location adjusted to neutral, then tidy up annotation rendering. [ ]
+10. If orf is root, sequence looks funny! (make orf inherit annotation wrapper) [ ]
+11. If render off a layer I think it won't work! [ ]
+12. Make a new subclass for restriction endonuclease annotation [X]
+13. Code clean-up!
+
+//----------------------------------------------------------
+seg works for peptides sequences for a pMolORF now!!!
+
+//----------------------------------------------------------
+
+Need a repeat removal system for the synthetic engine as some errors in actual synthesis emerged from having repeats I didn't notice. Also this repeat checker could be useful for excluding sequences we don't want
+
+http://www.csse.monash.edu.au/~lloyd/tildeAlgDS/Tree/Suffix/
+http://felix-halim.net/pg/suffix-tree/index.php 
+
+This is really excellent and explains Ukkanon's optimization very well
+http://maya.cs.depaul.edu/~classes/ds575/Suffix_Trees/
+//----------------------------------------------------------
+for blasting this C library looks just right! ClustalW. Let's absorb!!!
+
+
+//--------------------------------------------------------------
+Finally an SQL structure to store our data:
+
+each object can claim a number of tags
+1. object defenition only one!
+     <pMolDNA>
+     <pMolOligo>
+     <pMolOligoAnnotation>
+     <pMolPeptide>
+     <pMolRes>
+     <pMolResAnnotation>
+     <pMolAnnotation>
+     <pMolORF>
+     <pMolComment>can have as many as these. 
+     <pMolAnnotationLink>
+     <pMolSymanticLink>e.g. creationDescribedIn <takes lab book entry>
+                            useDescribedIn<takes lab book entry>
+                            derivedFrom<takes object>
+                            
+     also handles unknowns
+
+2. tags to other objects
+   <pMolTag>1223</pMolTag>
+
+
+
+
+//---------------------------------------------------
+How to get QDevelop to compile windows
+1. Set environment path to include MinGW/bin
+2. Point the external tool paths to the various Qt directories
+3. Point the compiler to MinGW/bin directory
+4. In the project properties, click advanced and make sure QtSQL, QtXML etc are clicked so they get included
+5. In the project properties make sure the source directory points to pMol????/scr
+6. In the variables, include all the subdirectories e.g. /staden; /pLabTools; etc to the INCLUDE
+7. Then should compile. There are a few surprisingly subtle differences in behaviour between GC+++ and the MinGW compiler under windows??? For instance I had an un-initialized bool which was always true in Linux and by luck the loop worked fine - then under windows this bug emerged...This kind of subtle, tricky stuff.
+
+//---------------------------------------------------
+How to get Qt to work under windows, esp the SQL bit
+1. I had fun and games trying to compile the MySQL plugin. I've now forgotten what I did - what I do remember is that you needed the full mySql install (with the header files etc in /src), you needed the full Qt install with all the source. Then you used MinGW to compile and make the plugin in Qt../drivers/plugins/mySql. Now, here's the catch! MinGW can't make a .dll so you have to strip some names from something and make it using some of the tools provided with MinGW. Somewhere there was a good post desrcibing this but I've lost it. Anyway, the dll exists.
+2. You need msyql/bin in the Path
+3. You need qt/bin in the Path
+4. You can set the driver plugin path directly into your Qt code...but I didn't do that, it seems to look for the plugin dll in the /drivers/plugins/mySql. If you put it here, it seems to work
+5. Firewall may bash it down.

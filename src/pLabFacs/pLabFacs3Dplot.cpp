@@ -1,0 +1,582 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#include "./pLabFacs/pLabFacs3Dplot.h"
+
+//------------------------------------------------------
+pLabFacs3DPlot::pLabFacs3DPlot(pMolKernelInterface* p_interface) : QGLWidget(), pMolStackObject()
+{
+  qDebug() << "pLabFacs3DPlot::constructor";
+
+  xRot = 0;
+  yRot = 0;
+  zRot = 0;
+  object = 0;
+
+  res = 64;
+
+  channel_x = 0;
+  channel_y = 1;
+  channel_z = 2;
+
+  voxels = NULL;
+  doNormalizeVoxels = true;
+  facsData = new pLabFacs();
+  fillVoxels();
+
+  qDebug() << "pLabFacs3DPlot::constructor";
+
+  trolltechGreen = QColor::fromCmykF(0.40, 0.0, 1.0, 0.0);
+  trolltechPurple = QColor::fromCmykF(0.0, 0.0, 0.0, 0.0);
+
+  interface = p_interface;
+};
+
+
+pLabFacs3DPlot::~pLabFacs3DPlot()
+{
+  makeCurrent();
+  glDeleteLists(object, 1);
+  if (voxels!=NULL) delete []voxels;
+};
+
+
+
+QSize pLabFacs3DPlot::minimumSizeHint() const
+{
+    return QSize(50, 50);
+}
+
+QSize pLabFacs3DPlot::sizeHint() const
+{
+    return QSize(400, 400);
+}
+
+//------------------------------------------------------
+void pLabFacs3DPlot::normalizeAngle(int *angle)
+{
+    while (*angle < 0)
+        *angle += 360 * 16;
+    while (*angle > 360 * 16)
+        *angle -= 360 * 16;
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::setXRotation(int angle)
+{
+    normalizeAngle(&angle);
+    if (angle != xRot) {
+        xRot = angle;
+        updateGL();
+    }
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::setYRotation(int angle)
+{
+    normalizeAngle(&angle);
+    if (angle != yRot) {
+        yRot = angle;
+        updateGL();
+    }
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::setZRotation(int angle)
+{
+    normalizeAngle(&angle);
+    if (angle != zRot) {
+        zRot = angle;
+        updateGL();
+    }
+}
+
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::initializeGL()
+{
+    qglClearColor(trolltechPurple.dark());
+    object = makeObject();
+    glShadeModel(GL_FLAT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::paintGL()
+{
+//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//  glLoadIdentity();
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    qglClearColor(trolltechPurple.dark());
+
+
+
+
+
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_MULTISAMPLE);
+    static GLfloat lightPosition[4] = { 10.0, 1.0, -20.0, 1.0 }; //quite wierd and beautiful 
+//  static GLfloat lightPosition[4] = { 0.0, 0.0, -50.0, 1.0 };
+//  static GLfloat lightPosition[4] = { 1.0, 1.0, 1.0, 0.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+//  glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+//  glLightfv(GL_LIGHT0, GL_SPECULAR, lightPosition);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
+    glTranslated(0.0, 0.0, 10.0);
+    glRotated(xRot / 16.0, 1.0, 0.0, 0.0);
+    glRotated(yRot / 16.0, 0.0, 1.0, 0.0);
+    glRotated(zRot / 16.0, 0.0, 0.0, 1.0);
+    glCallList(object);
+
+    glPopAttrib();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::resizeGL(int width, int height)
+{
+    int side = qMin(width, height);
+    glViewport((width - side) / 2, (height - side) / 2, side, side);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    //glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0);
+    glOrtho(-res/2.0, res/2.0, res/2.0, -res/2.0, -40, 40);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+
+//------------------------------------------------------
+void pLabFacs3DPlot::mousePressEvent(QMouseEvent *event)
+{
+    lastPos = event->pos();
+}
+
+//------------------------------------------------------
+void pLabFacs3DPlot::mouseMoveEvent(QMouseEvent *event)
+{
+    int dx = event->x() - lastPos.x();
+    int dy = event->y() - lastPos.y();
+
+    if (event->buttons() & Qt::LeftButton) {
+        setXRotation(xRot + 8 * dy);
+        setYRotation(yRot + 8 * dx);
+    } else if (event->buttons() & Qt::RightButton) {
+        setXRotation(xRot + 8 * dy);
+        setZRotation(zRot + 8 * dx);
+    }
+    lastPos = event->pos();
+}
+
+//------------------------------------------------------
+///byte boundary about to be exceeded, so shrink it all down
+void pLabFacs3DPlot::resetVoxels(int n)
+{
+  //calculate how much to reduce by
+  float f = (float) n / (float) facsData->getTotalEvents();
+
+  //make a look-up table
+  quint16 lookup[256];
+  for (int i=0; i>256; i++) 
+    lookup[i] = (quint16) (((float) i) * f);
+
+  //convert the buffer
+  for (int i=0; i<res*res*res; i++)
+    voxels[i] = lookup[voxels[i]];
+
+  //convert the voxelMax 
+  voxelMax = lookup[voxelMax];
+};
+
+//------------------------------------------------------
+///byte boundary about to be exceeded, so shrink it all down
+void pLabFacs3DPlot::normalizeVoxels(int n)
+{
+  //calculate how much to reduce by
+  if (voxelMax == 0) return;				//no data, no point doin' but nothing
+  float f = 255.0 / (float) voxelMax;
+
+  //make a look-up table
+  quint8 lookup[256];
+  for (int i=0; i<256; i++) 
+    lookup[i] = (quint8) (((float) i) * f);
+
+  //convert the buffer
+  for (int i=0; i<res*res*res; i++)
+    voxels[i] = lookup[voxels[i]];
+
+  //convert the voxelMax
+  voxelMax = 255;
+};
+
+
+void pLabFacs3DPlot::throwError(const QString &member, const QString &error)
+{
+  throw pMolError("pLabFacs3DPlot::"+member+":"+error);
+};
+
+///need to get max down to filter in a sensible lookup table
+///we have a shift to shift left the index
+///and a mask so we don't have to do bounds correct
+//example res = 100, channel = 2000
+//baseVoxels = 7; baseChannel = 11
+int *pLabFacs3DPlot::channelFilter(unsigned int max, int *shift, unsigned int *mask)
+{
+  double ln2 = log(2);				//natural log 2
+  double baseVoxels  = ceil(log(res)/ln2);		//how many bases the voxel buffer has
+  double baseChannel = ceil(log(max)/ln2);
+  double shift_d = baseChannel - baseVoxels;
+
+  //catch a strange error
+  if (shift_d < 0) 
+    throwError("channelFilter","channel has lower resolution than voxelspace");
+
+  int n = (int) ceil(pow(2, baseChannel - shift_d));
+  double f = (double) res / (double)(max >> (int) shift_d);
+  int *lookup = new int[n];
+  if (lookup == NULL)
+    throwError("channelFilter","could not allocate memory for lookup table");
+
+  for (int i=0; i<n; i++)
+    if (i<=max) 
+      lookup[i] = (int) ((double) i)*f;
+    else
+      lookup[i] = 0;				//overflow
+
+   qDebug() << n;
+   for (int i=0; i<n; i++) qDebug() << lookup[i];
+
+  *shift = (int) shift_d;
+  *mask = 0xffffff >> (24 - (int) (baseChannel - shift_d));
+  return lookup;
+};
+
+//------------------------------------------------------
+void pLabFacs3DPlot::fillVoxels()
+{
+  qDebug() << "in fill voxel";
+  //set up look-up tables for the three buffers
+  unsigned int channel_x_mask, channel_y_mask, channel_z_mask;
+  int channel_x_shift, channel_y_shift, channel_z_shift;
+  int *channel_x_lookup, *channel_y_lookup, *channel_z_lookup;
+  channel_x_lookup = channelFilter(facsData->getChannelMax(0), &channel_x_shift, &channel_x_mask);
+  channel_y_lookup = channelFilter(facsData->getChannelMax(1), &channel_y_shift, &channel_y_mask);
+  channel_z_lookup = channelFilter(facsData->getChannelMax(2), &channel_z_shift, &channel_z_mask);
+
+
+  qDebug() << facsData->getChannelMax(0) << channel_x_shift << channel_x_mask;
+  qDebug() << facsData->getChannelMax(1) << channel_y_shift << channel_y_mask;
+  qDebug() << facsData->getChannelMax(2) << channel_z_shift << channel_z_mask;
+
+  //allocate memory
+  int res2 = res*res;
+  int res3 = res2*res;
+  qDebug() << res << res3;
+  voxels = new quint8[res3];
+  if (voxels == NULL) 
+     throwError("fillVoxes","couldn't allocate memory");
+  for (int i = 0; i <  res3; i++) voxels[i] = 0;
+
+//fudge - if any voxel value is > 255, then we have to go and reduce everything down - we can do this by calculating what % through the data we are through
+
+  voxelMax = 0;
+  for (int n = 0; n < facsData->getTotalEvents(); n++)
+  {
+  //   qDebug() << "looping" << n;
+     quint16* event = facsData->getEvent(n);
+   //  qDebug() << "event " << voxels << event;
+
+     unsigned int x = channel_x_lookup[((*(event+channel_x)) >> channel_x_shift) & (channel_x_mask)];
+     unsigned int y = channel_y_lookup[((*(event+channel_y)) >> channel_y_shift) & (channel_y_mask)];
+     unsigned int z = channel_z_lookup[((*(event+channel_z)) >> channel_z_shift) & (channel_z_mask)];
+   //  qDebug() << res << x << y << z;
+
+     quint8 voxel = ++voxels[x + y*res + z*res2];
+   //  qDebug() << n << voxel << voxels[x + y*res + z*res2];
+
+     if (voxel == 255) resetVoxels(n);
+     if (voxel > voxelMax) voxelMax = voxel;
+  };
+
+  //normalize the voxels so most dense is always 255, may not want to do this.
+  if (doNormalizeVoxels) normalizeVoxels(voxelMax);
+
+  //clean up
+  delete []channel_x_lookup;
+  delete []channel_y_lookup;
+  delete []channel_z_lookup;
+};
+
+
+/*
+//------------------------------------------------------
+///blending is to make cubes translucent
+GLuint pLabFacs3DPlot::makeObject()
+{
+  qDebug() << "in makeObject";
+  int res2 = res*res;
+
+  glEnableClientState(GL_NORMAL_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glNormalPointer(GL_FLOAT, 0, normals);
+  glColorPointer(3, GL_FLOAT, 0, colors);
+  glVertexPointer(3, GL_FLOAT, 0, vertices);
+
+
+
+  for (int x = 0; x < res; x++)
+    for (int y = 0; y < res; y++)
+      for (int z = 0; z < res; z++)
+      {
+        quint8 voxel = voxels[x + y*res + z*res2];
+        if (voxel > 0)
+        {
+         qDebug() << voxel << "GLing" << x << y << z;
+  glPushMatrix();
+          glTranslatef(x,y,z);                  // move to upper-right
+          glDrawArrays(GL_QUADS, 0, 24);
+    glPopMatrix();
+        }
+      };
+
+
+
+    glDisableClientState(GL_VERTEX_ARRAY);  // disable vertex arrays
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+};
+*/
+
+GLuint pLabFacs3DPlot::makeObject()
+{
+  qDebug() << "in makeObject";
+  int res2 = res*res;
+
+    GLuint list = glGenLists(1);
+    glNewList(list, GL_COMPILE);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_DEPTH_TEST); 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+    glBegin(GL_QUADS);
+
+    static GLfloat logoDiffuseColor[4] = {trolltechGreen.red()/255.0,
+                                          trolltechGreen.green()/255.0,
+                                          trolltechGreen.blue()/255.0, 1.0};
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, logoDiffuseColor);
+
+
+
+  for (int x = 0; x < res; x++)
+    for (int y = 0; y < res; y++)
+      for (int z = 0; z < res; z++)
+      {
+        quint8 voxel = voxels[x + y*res + z*res2];
+        if (voxel > 0)
+        {
+        // qDebug() << voxel << "GLing" << x << y << z;
+  /*  GLdouble x1 = +0.06 + x;
+    GLdouble y1 = -0.14 + y;
+    GLdouble x2 = +0.14 + x;
+    GLdouble y2 = -0.06 + y;
+    GLdouble x3 = +0.08 + z;
+    GLdouble y3 = +0.00 + x;
+    GLdouble x4 = +0.30 + x;
+    GLdouble y4 = +0.22 + y;
+    quad(x1, y1, x2, y2, y2, x2, y1, x1);
+    quad(x3, y3, x4, y4, y4, x4, y3, x3);*/
+    quad(x,y,z,voxel);
+     //drawCube(x,y,z,voxel);
+
+        }
+      };
+
+   glEnd();
+
+    glEndList();
+    return list;
+
+};
+
+void pLabFacs3DPlot::quad(int p_x, int p_y, int p_z, int c)
+{
+    float res_2 = res / 2.0;
+    float x = p_x - res_2;
+    float y = p_y - res_2;
+    float z = p_z ;
+ //   qDebug() << x << y << z;
+// Translate Into The Screen 7.0 Units
+   // glRotatef(rotqube,0.0f,1.0f,0.0f);	// Rotate The cube around the Y axis
+   // glRotatef(rotqube,1.0f,1.0f,1.0f);
+    //glBegin(GL_QUADS);		// Draw The Cube Using quads
+   // glTranslatef(x, y, z);	
+  //    glColor3f(0.0f,1.0f,0.0f);	// Color Blue
+  trolltechGreen = QColor::fromCmykF((rand() & 0xff) / 255.0, (rand() & 0xff) / 255.0, (rand() & 0xff) / 255.0, 0.5);
+    //qglColor(trolltechGreen);
+    glVertex3f( 0.9f+x, 0.9f+y,-0.9f+z);	// Top Right Of The Quad (Top)
+    glVertex3f(-0.9f+x, 0.9f+y,-0.9f+z);	// Top Left Of The Quad (Top)
+    glVertex3f(-0.9f+x, 0.9f+y, 0.9f+z);	// Bottom Left Of The Quad (Top)
+    glVertex3f( 0.9f+x, 0.9f+y, 0.9f+z);	// Bottom Right Of The Quad (Top)
+   // glColor3f(0.9f,0.5f,0.0f);	// Color Orange
+    glVertex3f( 0.9f+x,-0.9f+y, 0.9f+z);	// Top Right Of The Quad (Bottom)
+    glVertex3f(-0.9f+x,-0.9f+y, 0.9f+z);	// Top Left Of The Quad (Bottom)
+    glVertex3f(-0.9f+x,-0.9f+y,-0.9f+z);	// Bottom Left Of The Quad (Bottom)
+    glVertex3f( 0.9f+x,-0.9f+y,-0.9f+z);	// Bottom Right Of The Quad (Bottom)
+   // glColor3f(0.9f,0.0f,0.0f);	// Color Red	
+    glVertex3f( 0.9f+x, 0.9f+y, 0.9f+z);	// Top Right Of The Quad (Front)
+    glVertex3f(-0.9f+x, 0.9f+y, 0.9f+z);	// Top Left Of The Quad (Front)
+    glVertex3f(-0.9f+x,-0.9f+y, 0.9f+z);	// Bottom Left Of The Quad (Front)
+    glVertex3f( 0.9f+x,-0.9f+y, 0.9f+z);	// Bottom Right Of The Quad (Front)
+   // glColor3f(0.9f,0.9f,0.0f);	// Color Yellow
+    glVertex3f( 0.9f+x,-0.9f+y,-0.9f+z);	// Top Right Of The Quad (Back)
+    glVertex3f(-0.9f+x,-0.9f+y,-0.9f+z);	// Top Left Of The Quad (Back)
+    glVertex3f(-0.9f+x, 0.9f+y,-0.9f+z);	// Bottom Left Of The Quad (Back)
+    glVertex3f( 0.9f+x, 0.9f+y,-0.9f+z);	// Bottom Right Of The Quad (Back)
+   // glColor3f(0.0f,0.0f,0.9f);	// Color Blue
+    glVertex3f(-0.9f+x, 0.9f+y, 0.9f+z);	// Top Right Of The Quad (Left)
+    glVertex3f(-0.9f+x, 0.9f+y,-0.9f+z);	// Top Left Of The Quad (Left)
+    glVertex3f(-0.9f+x,-0.9f+y,-0.9f+z);	// Bottom Left Of The Quad (Left)
+    glVertex3f(-0.9f+x,-0.9f+y, 0.9f+z);	// Bottom Right Of The Quad (Left)
+  //  glColor3f(0.9f,0.0f,0.9f);	// Color Violet
+    glVertex3f( 0.9f+x, 0.9f+y,-0.9f+z);	// Top Right Of The Quad (Right)
+    glVertex3f( 0.9f+x, 0.9f+y, 0.9f+z);	// Top Left Of The Quad (Right)
+    glVertex3f( 0.9f+x,-0.9f+y, 0.9f+z);	// Bottom Left Of The Quad (Right)
+    glVertex3f( 0.9f+x,-0.9f+y,-0.9f+z);	// Bottom Right Of The Quad (Right)
+  //glEnd();	
+}
+
+void pLabFacs3DPlot::drawCube(int p_x, int p_y, int p_z, int cc)
+{
+    float width = 1;
+    float res_2 = res / 2.0;
+
+    float x0 = p_x - res_2 - width;
+    float y0 = p_y - res_2 - width;
+    float z0 = p_z - width;
+
+    float x1 = p_x - res_2 + width;
+    float y1 = p_y - res_2 + width;
+    float z1 = p_z + width;
+
+
+    GLfloat v[8][3];
+    GLfloat c[8][4] = {
+      {0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 1.0},
+      {0.0, 1.0, 0.0, 1.0}, {1.0, 1.0, 0.0, 1.0},
+      {0.0, 0.0, 1.0, 1.0}, {1.0, 0.0, 1.0, 1.0},
+      {0.0, 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 1.0}
+   };
+
+/*  indices of front, top, left, bottom, right, back faces  */
+    GLubyte indices[6][4] = {
+      {4, 5, 6, 7}, {2, 3, 7, 6}, {0, 4, 7, 3},
+      {0, 1, 5, 4}, {1, 5, 6, 2}, {0, 3, 2, 1}
+   };
+
+   v[0][0] = v[3][0] = v[4][0] = v[7][0] = x0;
+   v[1][0] = v[2][0] = v[5][0] = v[6][0] = x1;
+   v[0][1] = v[1][1] = v[4][1] = v[5][1] = y0;
+   v[2][1] = v[3][1] = v[6][1] = v[7][1] = y1;
+   v[0][2] = v[1][2] = v[2][2] = v[3][2] = z0;
+   v[4][2] = v[5][2] = v[6][2] = v[7][2] = z1;
+
+
+   glEnableClientState (GL_VERTEX_ARRAY);
+   glEnableClientState (GL_COLOR_ARRAY);
+   glVertexPointer (3, GL_FLOAT, 0, v);
+   glColorPointer (4, GL_FLOAT, 0, c);
+   glDrawElements (GL_QUADS, 6*4, GL_UNSIGNED_BYTE, indices);
+   glDisableClientState (GL_VERTEX_ARRAY);
+   glDisableClientState (GL_COLOR_ARRAY);
+};
+
+pMolStackObject* pLabFacs3DPlot::create(pMolKernelInterface* p_interface, pMolCmd* cmd)
+{
+  qDebug() << "about to go pLabFacs3DPlot::constructor";
+  pLabFacs3DPlot* plot = new pLabFacs3DPlot(p_interface);
+  plot->show();
+  return plot;
+};
+
+// cube 
+//    v6----- v5
+//   /|      /|
+//  v1------v0|
+//  | |     | |
+//  | |v7---|-|v4
+//  |/      |/
+//  v2------v3
+
+// vertex coords array
+GLfloat pLabFacs3DPlot::vertices[] = {1,1,1,  -1,1,1,  -1,-1,1,  1,-1,1,        // v0-v1-v2-v3
+                      1,1,1,  1,-1,1,  1,-1,-1,  1,1,-1,        // v0-v3-v4-v5
+                      1,1,1,  1,1,-1,  -1,1,-1,  -1,1,1,        // v0-v5-v6-v1
+                      -1,1,1,  -1,1,-1,  -1,-1,-1,  -1,-1,1,    // v1-v6-v7-v2
+                      -1,-1,-1,  1,-1,-1,  1,-1,1,  -1,-1,1,    // v7-v4-v3-v2
+                      1,-1,-1,  -1,-1,-1,  -1,1,-1,  1,1,-1};   // v4-v7-v6-v5
+
+// normal array
+GLfloat pLabFacs3DPlot::normals[] = {0,0,1,  0,0,1,  0,0,1,  0,0,1,             // v0-v1-v2-v3
+                     1,0,0,  1,0,0,  1,0,0, 1,0,0,              // v0-v3-v4-v5
+                     0,1,0,  0,1,0,  0,1,0, 0,1,0,              // v0-v5-v6-v1
+                     -1,0,0,  -1,0,0, -1,0,0,  -1,0,0,          // v1-v6-v7-v2
+                     0,-1,0,  0,-1,0,  0,-1,0,  0,-1,0,         // v7-v4-v3-v2
+                     0,0,-1,  0,0,-1,  0,0,-1,  0,0,-1};        // v4-v7-v6-v5
+
+// color array
+GLfloat pLabFacs3DPlot::colors[] = {1,1,1,  1,1,0,  1,0,0,  1,0,1,              // v0-v1-v2-v3
+                    1,1,1,  1,0,1,  0,0,1,  0,1,1,              // v0-v3-v4-v5
+                    1,1,1,  0,1,1,  0,1,0,  1,1,0,              // v0-v5-v6-v1
+                    1,1,0,  0,1,0,  0,0,0,  1,0,0,              // v1-v6-v7-v2
+                    0,0,0,  0,0,1,  1,0,1,  1,0,0,              // v7-v4-v3-v2
+                    0,0,1,  0,0,0,  0,1,0,  0,1,1};             // v4-v7-v6-v5
+
+// index array of vertex array for glDrawElements()
+// Notice the indices are listed straight from beginning to end as exactly
+// same order of vertex array without hopping, because of different normals at
+// a shared vertex. For this case, glDrawArrays() and glDrawElements() have no
+// difference.
+GLubyte pLabFacs3DPlot::indices[] = {0,1,2,3,
+                     4,5,6,7,
+                     8,9,10,11,
+                     12,13,14,15,
+                     16,17,18,19,
+                     20,21,22,23};

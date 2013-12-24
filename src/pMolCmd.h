@@ -1,0 +1,124 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLCMD_H
+#define PMOLCMD_H
+
+#include <QString>
+#include <QList>
+#include <QtGui>
+
+#include "pMolXMLbase.h"
+///Base class for abstract command tree
+///When a command is first interpreted, it is encapsulated into a typed tree
+///structure ready for execution. This class is the base member
+class pMolCmd : public pMolXMLbase
+{
+  public :
+    pMolCmd();
+    virtual ~pMolCmd();
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree)=0;
+    enum childTypes {OBJ, STRING, NUMBER, ERROR, NAME, LIST, CHILD};
+};
+
+///Command tree object which represents a string
+class pMolCmdString : public pMolCmd
+{
+  public :
+    pMolCmdString(const QString &p_string);
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    QString string;
+
+};
+
+///command tree object which represents a number
+class pMolCmdNumber : public pMolCmd
+{
+  public :
+    pMolCmdNumber(int p_n);
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    int n;
+};
+
+///command tree object which represents an error. Simply contains an error
+///message as a QString object which has some information about what went wrong.
+class pMolCmdError : public pMolCmd
+{
+  public :
+    pMolCmdError(const QString &p_error);
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    QString error;
+};
+
+///command tree object which represents a command name. Also contains a further
+///pMolCmdObject in variable child. For instance given the command <br>SFG.eGFP->eGFP
+/// <i> the child object would be another pMolCmdName containing "eGFP".</i> <br> 
+///mpSV(SFG.eGFP) <i> here the child would be a pMolCmdList containing pMolCmd </i>
+class pMolCmdName : public pMolCmd
+{
+  public :
+    pMolCmdName(const QString &p_name);
+    virtual ~pMolCmdName();
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    pMolCmd* child;
+    QString name;
+    int mp;
+};
+
+///command tree object which represents a command name child. Also contains a further
+///pMolCmdObject in variable child. For instance given the command <br>SFG.eGFP->eGFP
+/// <i> the child object would be another pMolCmdName containing "eGFP".</i> <br> 
+///mpSV(SFG.eGFP) <i> here the child would be a pMolCmdList containing pMolCmd </i>
+class pMolCmdChild : public pMolCmdName
+{
+  public :
+    pMolCmdChild(const QString &p_name);
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+};
+
+///command tree object representing a list. Most commonly this would contain a parameter
+///list but I will extend this to lists of objects since the difference is trivial.
+///Take for instance: <br> SFG.eGFP->seg(EcoRI, BamHI) the eGFP's pMolCmdName's child
+///would be a pMolCmdList containing EcoRI and BamHI
+class pMolCmdList : public pMolCmd
+{
+  public :
+    virtual ~pMolCmdList();
+    virtual int type();
+    virtual bool type(int code);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    void append(pMolCmd* p_cmd);
+    int length();
+    pMolCmd* at(int i);
+    QList <pMolCmd*> list;
+};
+
+#endif

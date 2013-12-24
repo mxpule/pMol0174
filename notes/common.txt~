@@ -1,0 +1,147 @@
+n:=huNF-ATC1tc1
+nf:=n->NF-ATc
+p:=pcr->sequence(nf,4)
+nf->add(p)
+s:=nf->seg(peptide('s'))
+
+prolines=n->find(peptide('p'))
+this gives a layer of huNF-ATC1tc1->NF-ATc with all the prolines marked
+all great so far, it's what comes next that bugs me!
+if we do:
+mpSV(prolines)
+we see a nice annotation of nf with the prolines marked
+if we do:
+mpSV(nf) 
+what should we see????
+perhaps just plain old nf until we do:
+
+we could do nf->add(prolines)
+now a new layer called prolines is added with all the prolines
+
+we could do 
+nf->add(prolines[3])
+nf->add(prolines[5])
+nf->add(prolines[6])
+proline 3,5 and 6 are added to the default layer 
+
+pMol:Obj:>hello, this is pMol version 0.27 -
+pMol:Obj:>let's create something together.
+pMol:Obj:>e:=EcoRI->find(SFG.14g2a-CD28-Zeta)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>1
+pMol:Obj:>mpSV(e)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>p:=peptide('sa')
+pMol:Obj:>hInsp(SFG.14g2a-CD28-Zeta)
+pMol:Obj:>g:=SFG.14g2a-CD28-Zeta->14g2a-CD28-Zeta
+pMol:Obj:>hInsp(g)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>failed to open /home/mxpule/compute/source/pMol0033/pMol/g.pMol
+pMol:Obj:>a:=SFG.14g2a-CD28-Zeta->AMP
+pMol:Obj:>hInsp(a)
+pMol:Obj:>g:=HomoSapiensCodonCodex->findORFs(double,128)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>HomoSapiensCodonCodex::findORFs found at: ATGTCAAGAAGAGACGTTGGGTTACCTTCTGCTCTGCAGAATGGCCAA
+pMol:Obj:>HomoSapiensCodonCodex::findORFs found at: ATGACAAGAGTTACTAACAGCCCCTCTCTCCAAGCTCACTTACAGGCT
+pMol:Obj:>HomoSapiensCodonCodex::findORFs found at: ATGGAGTTTGGGCTGAGCTGGCTTTTTCTTGTGGCTATTTTAAAAGGT
+pMol:Obj:>hInsp(g)
+pMol:Obj:>mpSV(g)
+pMol:Obj:>
+pMol:Obj:>mpSV(g)
+pMol:Obj:>
+pMol:Obj:>o:=g->ORF
+pMol:Obj:>hInsp(g)hInsp(r)r:=o->seg(p)
+pMol:Obj:>hInsp(o)
+pMol:Obj:>mpSV(o)
+pMol:Obj:>p:=peptide('m')
+pMol:Obj:>r:=o->seg(p)
+pMol:Obj:>seg here
+pMol:Obj:>hInsp(r)
+pMol:Obj:>
+
+pMol:Obj:>0
+pMol:Obj:>14
+pMol:Obj:>23
+pMol:Obj:>CTTTCCAGTCCCTTCCAAGTTTC
+pMol:Obj:>64000
+pMol:Obj:>479
+pMol:Obj:>22
+pMol:Obj:>CAGCCTGGAGGCCTACAGAGAC
+pMol:Obj:>64000
+pMol:Obj:>982
+pMol:Obj:>22
+pMol:Obj:>GAGATGGCGTCCCTGTCAAGTC
+pMol:Obj:>64000
+pMol:Obj:>1469
+pMol:Obj:>22
+pMol:Obj:>CTTCTACCAGGTGCACCGCATC
+pMol:Obj:>18
+pMol:Obj:>1919
+pMol:Obj:>22
+pMol:Obj:>GGAGATGGAAGCGAAAACTGAC
+pMol:Obj:>0
+pMol:Obj:>2128
+pMol:Obj:>22
+pMol:Obj:>CATGTTCACGGCTTACGGTTAG
+pMol:Obj:>0
+pMol:Obj:>1652
+pMol:Obj:>24
+pMol:Obj:>GTCTCTCCTTTCCGAAGTTCAATG
+pMol:Obj:>64000
+pMol:Obj:>1164
+pMol:Obj:>22
+pMol:Obj:>CGCCAGGTACTGGTCGCAGAAG
+pMol:Obj:>64000
+pMol:Obj:>701
+pMol:Obj:>22
+pMol:Obj:>GGGGAACCCAGCAGTGTGCAGG
+pMol:Obj:>64000
+pMol:Obj:>229
+pMol:Obj:>22
+pMol:Obj:>GTGTGGAGGTCTGAAGGTTGTG
+
+c:=SFG.CNa_x1.IRES.eGFP
+mpSV(c->CNa_x1)
+n:=huNF-ATC1tv1
+n:=huNF-ATC1tc1
+mpSV(n->NF-ATc)
+n->NF-ATc->sequencing_primers->dumpSequences
+l:=HomoSapiensCodonCodex->code(peptide('mpstsfpvpskfplgp'))
+HomoSapiensCodonCodex->code(p)
+mpSV(huNF-ATC1tc1->NF-ATc)
+mpSV(earlyCode)
+
+pMol:Obj:>hello, this is pMol version 0.27 -
+pMol:Obj:>let's create something together.
+pMol:Obj:>n:=huNF-ATC1tv1
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>nf:=n->NF-ATc
+pMol:Obj:>mpSV(nf)
+pMol:Obj:>
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>EST:=nf->seg(dna('gatgtggagg'),dna('caagaccaccc'))
+pMol:Obj:>mpSV(EST)
+pMol:Obj:>nf->add(EST)
+pMol:Obj:>mpSV(nf)
+pMol:Obj:>j:=find(dna('gtccccttgcaac'))
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>failed to open /home/mxpule/compute/source/pMol0039/pMol/find.pMol
+pMol:Obj:>j:=nf->find(dna('gtccccttgcaac'))
+pMol:Obj:>mpSV(j)
+pMol:Obj:>nf->add(j->gyccccyygcaac779)
+pMol:Obj:>NF-ATc->add::Something went wrong interpreting parameter list
+pMol:Obj:>nf->add(j->gtccccttgcaac779)
+pMol:Obj:>mpSV(nf)
+pMol:Obj:>
+
+
+http://www.ncbi.nlm.nih.gov/books/bv.fcgi?rid=toolkit.part.4
+http://www.sigmaaldrich.com/Area_of_Interest/Life_Science/Antibody_Explorer/Spotlights/Antibodies_To_Epitope_Tags.html
+http://www.sigmaaldrich.com/catalog/search/ProductDetail?ProdNo=F3165&Brand=SIGMA

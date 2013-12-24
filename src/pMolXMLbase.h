@@ -1,0 +1,71 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLXMLBASE_H
+#define PMOLXMLBASE_H
+
+#include <QString>
+#include <QStringList>
+#include <QTextStream>
+#include <QTreeWidgetItem>
+
+///Base Clase for XML searches.
+///Handles trivia such as "name" and "comment"
+///Contains a pointer to allow nested XML
+
+class pMolXMLbase
+{
+  public:
+    pMolXMLbase();
+    pMolXMLbase(pMolXMLbase * p_p_MolXMLbaseParent);
+    virtual pMolXMLbase* XMLopen(const QString &tag, QString &error);
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual void treeOut(QTreeWidgetItem *tree);
+
+    QString getName();
+    QString getComments();
+    void addComment(const QString &comment);
+
+    static bool XMLsaveOpen(QTextStream* stream, const QString &name);
+    static bool XMLsaveClose(QTextStream* stream, const QString &name);
+    static bool XMLsave(QTextStream* stream, const QString &name, int i);
+    static bool XMLsave(QTextStream* stream, const QString &name, bool b);
+    static bool XMLsave(QTextStream* stream, const QString &name, double d);
+    static bool XMLsave(QTextStream* stream, const QString &name, const QString &date);
+    static bool XMLsave(QTextStream* stream, const QString &name, const QStringList &list);
+
+    static bool XMLdouble(double* x, const QString &data, QString &error);
+    static bool XMLnumeric(int *x, const QString &data, QString &error);
+    static bool XMLboolean(bool *circular, const QString &data, QString &error);
+
+    QTreeWidgetItem* treeItem(QTreeWidgetItem* parent, const QString &name);
+    QTreeWidgetItem* treeItem(QTreeWidgetItem* parent, const QString &name, const QString &value);
+    QTreeWidgetItem* treeItem(QTreeWidgetItem* parent, const QString &name, int value);
+    QTreeWidgetItem* treeItem(QTreeWidgetItem* parent, const QString &name, double value);
+    QTreeWidgetItem* treeItem(QTreeWidgetItem* parent, const QString &name, bool value);
+
+    int number;
+    QString name;
+
+  protected:
+    QStringList comments;
+    pMolXMLbase *pMolXMLbaseParent;
+};
+
+#endif

@@ -1,0 +1,143 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+//-----------------------------------------------------------------------------------------------------------
+///constructor which changes sequence of peptide into an array of pointers to codons
+pMolSynthArray::pMolSynthArray(pMolCodon* p_baseCodon, const QString &translation)
+{
+  baseCodon=p_baseCodon;
+
+  for (int i=0; i<maxLength; i++)
+   if (i<translation.length())
+    codons[i] = baseCodon->searchTranslation(translation.mid(i,1));
+  else 
+    codons[i]=NULL;
+
+  if (maxLength<translation.length())
+    length = maxLength;
+  else
+    length = translation.length();
+};
+
+//-----------------------------------------------------------------------------------------------------------
+///destructor which does nothing
+pMolCodonArray::~ pMolCodonArray() { };
+
+//-----------------------------------------------------------------------------------------------------------
+///returns member of the array at i
+pMolCodon* pMolCodonArray::at(int i)
+{
+  if (i>=length) return NULL;
+  return codons[i];
+};
+
+
+//-----------------------------------------------------------------------------------------------------------
+///tries to flip a codon, sends false if can't
+bool pMolCodonArray::flip(int i)
+{
+  if (i>=length) return false;
+  if (codons[i] == NULL) return false;
+
+  pMolCodon* similarCodon = codons[i]->similarTranslation();
+  if (similarCodon==NULL) return false;
+
+  codons[i] = similarCodon;
+  return true;
+};
+
+//-----------------------------------------------------------------------------------------------------------
+///reset a codon to base (so can be flipped again)
+void pMolCodonArray::reset(int i)
+{
+  if (i>=length) return;
+  if (codons[i]==NULL) return;
+  codons[i]=baseCodon->searchTranslation(codons[i]->translation.toUpper());
+};
+
+///circular flip - keeps on going around!
+void pMolCodonArray::cflip(int i)
+{
+  if (flip(i)) return;
+  reset(i);
+  return;
+};
+//-----------------------------------------------------------------------------------------------------------
+///copy an array over
+void pMolCodonSynth::copy(pMolCodonArray* array)
+{
+  for (int i=0; i < array->length; i++)
+    codons[i] = array->at(i);
+
+  length = array->length;
+};
+
+///Are they so similar that there are more than repeatsAllowed per segLength?
+///Can do this faster by allocating more memory. Sorry Alan.
+double pMolCodonArray::similarity(pMolCodonArray* codons2, int repeatsAllowed, int segLength)
+{
+  QString seq1 = sequence();
+  QString seq2 = codons2->sequence();
+  int seq1Length = seq1.length();
+  int seq2Length = seq2.length();
+  double badness = 0.0;
+   
+  for (int i=0; i<seq1.length()-segLength; i++)
+  {
+    int repeats = 0;
+    for (int j=0; j<seq1Length; j++)
+    {
+      if (i+j >= seq1Length) return badness;
+      if (i+j >= seq2Length) return badness;
+      if (seq1.at(i+j) == seq2.at(i+j)) repeats++;
+      if (repeats > repeatsAllowed) 
+      { badness+=repeatPenalty;
+        repeats = 0;
+      };
+    }
+  }
+  return badness;
+};
+
+
+
+
+//-----------------------------------------------------------------------------------------------------------
+///return the badness of this sequence
+///only partially finished, for short segments will also need to take into account
+///repeated bases (longer than say 6), GC content and hairpin loops
+double pMolCodonArray::badness()
+{
+  double bad = 0.0;
+  for (int i=0;i<length; i++)
+    if (codons[i]!=NULL) 
+      bad+=codons[i]->badness;
+
+  return bad;
+};
+
+//-----------------------------------------------------------------------------------------------------------
+///return the actual sequence of this array
+QString pMolCodonArray::sequence()
+{
+  QString s = "";
+  for (int i=0; i<length; i++)
+    if (codons[i]!=NULL) s+=codons[i]->code;
+  return s;
+};

@@ -1,0 +1,115 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#include "pMolRea.h"
+
+pMolRea::pMolRea(): pMolElement(NULL) 
+{
+  re = NULL;   
+};
+
+pMolRea::pMolRea(pMolRestrictionEndonuclease* p_re) : pMolElement(NULL)
+{
+  re = p_re;
+  reName = p_re->getName();
+};
+
+pMolRea::pMolRea(pMolXMLbase *p_pMolXMLbase) : pMolElement(p_pMolXMLbase)   {  
+  re = NULL;
+};
+
+//---------------------------------------------------------------------------------------
+///handle XML open command. Children can be another annotation or a layer
+pMolXMLbase* pMolRea::XMLopen(const QString &tag, QString &error)
+{
+  return pMolObject::XMLopen(tag, error);
+};
+
+pMolXMLbase* pMolRea::XMLclose(const QString &tag, const QString &data, QString &error)
+{
+  if (tag=="pMolRea")     			return pMolXMLbaseParent; 
+  else if (tag=="reName")               	reName = data; 
+  else return pMolElement::XMLclose(tag, data,error);
+  return (pMolXMLbase*) this; 
+};
+
+
+bool pMolRea::type(int i)
+{ 
+  if (i == pMolStackObject::REA)  return true;
+  return pMolElement::type(i);
+};
+
+///XML save contents
+bool pMolRea::saveContents(QTextStream* stream)
+{
+  XMLsave(stream, "reName", reName);
+  return pMolElement::saveContents(stream);
+};
+
+
+bool pMolRea::save(QTextStream* stream)
+{
+  XMLsaveOpen(stream, "pMolRea");
+  saveContents(stream);
+  XMLsaveClose(stream,"pMolRea");
+  return true;
+};
+
+pMolElement* pMolRea::getElement(int* i)
+{
+  return NULL;
+};
+
+pMolElement* pMolRea::getElement(const QString &p_name)
+{
+  return NULL;
+};
+
+pMolElement* pMolRea::duplicate()
+{
+  pMolRea* rea = new pMolRea();
+  rea->name = name;
+  rea->addComment(getComments());
+  rea->reName = reName;
+  rea->setIndex(index);
+  rea->setLength(length);
+  rea->re = re;
+  return (pMolElement*) rea;
+};
+
+//----------------------------------------------------------------------
+///load up any dependencies in child elements
+bool pMolRea::loadDependencies(pMolKernelInterface* interface)
+{
+  if (re!=NULL) return true;
+
+  pMolObject* object = interface->lookup(reName);
+  if (object != NULL) if (object->type(pMolStackObject::RESTRICTIONENDONUCLEASE)) 
+  { 
+    re = dynamic_cast<pMolRestrictionEndonuclease*>(object);
+    return true;
+  };
+
+  return false;
+};
+
+void pMolRea::annotate(const QString &name, const QString &comment, int index, int length)
+{
+};

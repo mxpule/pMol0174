@@ -1,0 +1,113 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PMOLELEMENT_H
+#define PMOLELEMENT_H
+
+#include <QString>
+#include <QList>
+#include <QtGui>
+
+#include "pMolCmd.h"
+#include "pMolStackObject.h"
+#include "pMolKernelInterface.h"
+
+///Sub molecular class - usually used for annotating a molecule. I need to change this so this
+///so there is just one efficient class to represent DNA. This class should have minimal associated
+///memory useage other than sequence data, should have very little to do with rendering (done by
+///outside classes) and can be used to annotate itself.
+///One central concept is how it works out its DNA sequence relative to a parent class. If it has
+///a sequence (i.e. variable sequence below exists - that's fine but if it doesn't exist it goes to 
+///the parent class and gets what it needs - remember this is complex since parent can be circular
+///we can ask for complementary sequence etc.
+class pMolElement : public pMolStackObject
+{
+  public:
+    pMolElement();
+    pMolElement(pMolXMLbase *p_pMolXMLbaseParent);
+    void deleteElements();
+    bool is(pMolCmdName* cmdName);
+
+    virtual pMolXMLbase* XMLopen(const QString &tag, QString &error) = 0;
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+
+    virtual QString getSequence();
+    virtual QString getSequence(int i0,int i1);
+    virtual QString getComplement();
+    virtual int getLength();
+    virtual int getIndex();
+    virtual void setLength(int p_length);
+    virtual void setIndex(int p_index);
+    virtual bool type(int i);
+    virtual bool isCircular();
+    virtual pMolElement* getElement(int* i);
+    virtual pMolElement* n_getElement(int i);
+    virtual pMolElement* getElement(pMolCmdName* cmdName);
+    virtual void append(pMolElement* element);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    virtual bool save(QTextStream* stream)=0;
+    virtual bool saveContents(QTextStream* stream);
+    virtual pMolElement* duplicate()=0;
+    virtual void annotate(const QString &name, const QString &comment, int index, int length)=0;
+    virtual pMolStackObject* exec(pMolCmd* cmd, pMolKernelInterface* interface);
+    virtual QString getHierarchialName();
+
+//to become standardized
+
+
+
+    pMolStackObject* find(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* findDNASequence(pMolElement* dna);
+    pMolStackObject* command(pMolCmdName* cmdName, pMolKernelInterface* interface);
+    pMolStackObject* save(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* add(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_length(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_rename(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_comment(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_complement(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* dumpSequences(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* uploadPrimers(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* dumpPrimers(pMolCmd* cmd, pMolKernelInterface* interface);
+    int getIndex(pMolStackObject* object);
+    int childCount();
+
+
+    pMolElement* cutLeftSub(int index);
+    pMolElement* cutRightSub(int index);
+
+    QString cleanString(const QString &s);
+    static QString complementString(const QString &s);
+
+   bool getRelativeIndex(pMolElement* dna, int* i, int* l, QString &error);
+
+    pMolElement* pMolParent;
+
+  protected:
+    int index;
+    int length;
+
+    QList <pMolElement*> pMolElements;
+
+
+    pMolElement* cutLeftElement(int index, pMolElement* element);
+    pMolElement* cutRightElement(int index, pMolElement* element);
+};
+
+#endif

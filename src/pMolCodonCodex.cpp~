@@ -1,0 +1,589 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#include "pMolCodonCodex.h"
+#include "pMolLayer.h"
+#include "pMolORF.h"
+#include "pMolDNA.h"
+#include "pMolPeptide.h"
+#include <QtGui>
+#include <math.h>
+
+//--------------------------------------------------------------------------------------------------
+///constructors and destructors
+pMolCodonCodex::pMolCodonCodex() : pMolStackObject(NULL)
+{
+  frameLength = 3;
+  currentCodonExists = false;
+  baseCodon = new pMolCodon((pMolXMLbase*) this);
+};
+
+
+pMolCodonCodex::pMolCodonCodex(pMolXMLbase *p_pMolXMLbaseParent) : pMolStackObject(p_pMolXMLbaseParent)
+{
+  frameLength = 3;
+  currentCodonExists = false;
+  baseCodon = new pMolCodon((pMolXMLbase*) this);
+};
+
+pMolCodonCodex::~pMolCodonCodex()
+{
+  foreach (pMolCodon* codon, codons) delete codon;
+};
+
+//--------------------------------------------------------------------------------------------------
+///handle XML open stream
+pMolXMLbase* pMolCodonCodex::XMLopen(const QString &tag, QString &error)
+{
+  if (tag=="codon") 
+  { pMolCodon* codon = new pMolCodon((pMolXMLbase*) this); 
+    codons.append(codon);
+    return (pMolXMLbase*) codon;
+  };
+  return pMolXMLbase::XMLopen(tag, error);
+};
+
+//--------------------------------------------------------------------------------------------------
+///handle XML close stream
+pMolXMLbase* pMolCodonCodex::XMLclose(const QString &tag, const QString &data, QString &error)
+{
+  if (tag=="pMolCodonCodex") 
+  { linkCodons(); 			//link up all the codons in binary trees
+    return pMolXMLbaseParent; 
+  }
+  else if (tag=="translatesFrom") 	translateFrom = data; 
+  else if (tag=="translatesTo")   	translateTo = data; 
+  else if (tag=="frameLength") 	XMLnumeric(&frameLength, data, error); 
+  else if (tag=="iterations") 		XMLnumeric(&iterations, data, error); 
+  else return pMolXMLbase::XMLclose(tag, data,error);
+  return (pMolXMLbase*) this; 
+}
+
+//--------------------------------------------------------------------------------------------------
+///output XML data as a tree structure
+void pMolCodonCodex::treeOut(QTreeWidgetItem *tree)
+{
+  pMolXMLbase::treeOut(tree);
+  treeItem(tree,"translateFrom",translateFrom);
+  treeItem(tree,"translateTo",translateTo);
+  treeItem(tree,"frameLength",frameLength);
+  treeItem(tree,"totalFrequency",totalFrequency);
+
+  foreach (pMolCodon* codon, codons) codon->treeOut(tree);
+};
+
+
+//--------------------------------------------------------------------------------------------------
+///returns type information for execution, dynamic casting etc
+bool pMolCodonCodex :: type(int i)
+{
+  if (i==pMolObject::CODONCODEX) 	return true;	else
+  if (i==pMolObject::EXEC) 		return true; 	else
+  if (i==pMolObject::ENGINE) 		return true; 	else
+  return pMolStackObject::type(i);
+}
+
+
+//--------------------------------------------------------------------------------------------------
+///handles addition of a new codon into the library and links them up
+void pMolCodonCodex :: linkCodons()
+{
+  if (codons.size()<1) 
+  { functional = false; return;}
+
+  baseCodon = codons.at(0);
+  totalFrequency = baseCodon->frequency;
+
+  for (int i=1; i<codons.size(); i++)  
+  { baseCodon->linkCodon(codons.at(i));
+    baseCodon->linkTranslation(codons.at(i));
+   totalFrequency+= codons.at(i)->frequency;
+  };
+  functional = true;
+}
+
+//--------------------------------------------------------------------------------------------------
+///translates a string into corresponding sequence
+QString pMolCodonCodex::translate(const QString &p_source)
+{
+  bool start, stop; 
+  QString source = p_source.toLower();
+  QString translation, temp;
+  translation = "";
+
+  for (int i=0; i+frameLength<=source.length(); i+=frameLength)
+  { if ((temp= baseCodon->searchCode(source.mid(i,frameLength),&start,&stop))==NULL) 
+      translation+="?";
+    else 
+      translation +=temp;
+  }
+
+  return translation;
+};
+
+//--------------------------------------------------------------------------------------------------
+///gets codon for a given code
+pMolCodon* pMolCodonCodex::getCodon(const QString &p_source)
+{
+  return baseCodon->getCodon(p_source);
+};
+
+//--------------------------------------------------------------------------------------------------
+///return base codon
+pMolCodon* pMolCodonCodex::getBaseCodon()
+{
+  return baseCodon;
+};
+//--------------------------------------------------------------------------------------------------
+///reverse translation
+QString pMolCodonCodex::code(const QString &sequence)
+{
+  QString coding = "";
+
+  for (int i=0; i<sequence.length(); i++)
+    coding += baseCodon->searchTranslation(sequence.mid(i,1))->code;
+
+  return coding;
+};
+
+//--------------------------------------------------------------------------------------------------
+///does this sequence represent a start codon?
+bool pMolCodonCodex::isStart(QString s)
+{
+  bool start, stop;
+  if (baseCodon->searchCode(s,&start,&stop)==NULL) return false;
+  return start;
+};
+
+//--------------------------------------------------------------------------------------------------------------------
+///does this sequence represent a stop codon?
+bool pMolCodonCodex::isStop(QString s)
+{
+  bool start, stop;
+  if (baseCodon->searchCode(s,&start,&stop)==NULL) return false;
+  return stop;
+};
+
+//-----------------------------------------------------------------------------------------------------------
+///get the length of a reading frame starting from i in the molecule dna
+int pMolCodonCodex::ORFlength(pMolElement* dna, int i)
+{
+  if (!isStart(dna->getSequence(i,frameLength).toLower())) return 0;
+
+  int j;
+  QString s;
+
+  if (dna->isCircular()) 
+    s = dna->getSequence(i,dna->getLength()).toLower();
+  else
+    s = dna->getSequence(i,dna->getLength() - i).toLower();
+
+  for (j=0; j<s.length(); j+=frameLength)
+    if (isStop(s.mid(j,frameLength))) {j+=frameLength; break;}
+
+  return j;
+};
+
+//-----------------------------------------------------------------------------------------------------------
+///get the length of a reading frame starting from i in the molecule dna not needing a ATG
+int pMolCodonCodex::ORFlength3(pMolElement* dna, int i)
+{
+  int j;
+  QString s;
+
+  if (dna->isCircular()) 
+    s = dna->getSequence(i,dna->getLength()).toLower();
+  else
+    s = dna->getSequence(i,dna->getLength() - i).toLower();
+
+  for (j=0; j<s.length(); j+=frameLength)
+    if (isStop(s.mid(j,frameLength))) {j+=frameLength; break;}
+
+  return j;
+};
+
+
+//-------------
+///debug
+pMolStackObject* pMolCodonCodex::debug(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  QString s = "GPAVLIMCFYWHKRQNEDST";
+  for (int i=0; i<s.length(); i++)
+  { pMolCodon* codon = baseCodon->searchTranslation(s.mid(i,1));
+    while (codon!=NULL)
+    { qDebug() << s.mid(i,1) << codon->code << codon->codeCount << codon->frequency
+               << codon->codeFrequency << codon->usagePercent << codon->badness;
+      codon = codon->similarTranslation();
+    }
+    qDebug() << "----------";
+  };
+  return NULL;
+};
+
+
+//--------------------------------------------------------------------------------------------------------------------
+///this is a nascent codon optimization algorithm. 
+///far from complete. Once pMolCodonArray->badness() works properly
+///it will need recursion. Then, a Monte-carlo approach to getting rid
+///of repeated sequences will be need. There are other sequences like
+///cryptic splice acceptors etc (see notes and my lab book entry MP0317
+pMolCodonArray* pMolCodonCodex::codeOptimizeSeqment(QString translation)
+{
+  double bestBadness = 99999999999.9;
+  pMolCodonArray* bestCodons = new pMolCodonArray(baseCodon, "");
+  pMolCodonArray* codons = new pMolCodonArray(baseCodon, translation);
+  qDebug() << codons->sequence();
+
+  bestCodons->copy(codons);
+  for (int i=0; i<codons->length; i++)
+  {  while (codons->flip(i))
+    { 
+      double badness = codons->badness();
+      if (badness<bestBadness) 
+      { bestCodons->copy(codons);
+        bestBadness = badness;
+      };
+    };
+    codons->copy(bestCodons);
+  };
+  delete codons;
+
+  return bestCodons;
+};
+
+
+//--------------------------------------------------------------------------------------------------------------------
+///this is a nascent "wobble" algorithm needs some work!
+pMolCodonArray* pMolCodonCodex::codeWobble(pMolCodonArray* codons1)
+{
+  double bestBadness = 99999999999.9;
+  pMolCodonArray* codons2 = new pMolCodonArray(baseCodon, "");
+  pMolCodonArray* bestCodons1 = new pMolCodonArray(baseCodon, "");
+  pMolCodonArray* bestCodons2 = new pMolCodonArray(baseCodon, "");
+  codons2->copy(codons1);
+
+  for (int i=0; i<iterations; i++)
+  { int j=round(((double)codons1->length)*drand48());
+    if (i & 1)
+      codons1->cflip(j);
+    else
+      codons2->cflip(j);
+//    qDebug() << "about to test" << j << codons1->length;
+      double badness = codons1->badness() + codons2->badness() + codons1->similarity(codons2, 12, 16);
+      //qDebug() << "bad" << badness;
+      if (badness<bestBadness)
+      { bestCodons1->copy(codons1);
+        bestCodons2->copy(codons2);
+        bestBadness = badness;
+      };
+ 
+  };
+  codons1->copy(bestCodons1);
+  delete codons2;
+  delete bestCodons1;
+  return bestCodons2;
+};
+
+//--------------------------------------------------------------------------------------------------------------------
+///Finds ORFs and returns them as a layer to the parent molecule. Integer parameter as minimum length
+pMolStackObject* pMolCodonCodex::c_findORF(pMolCmd* cmd, pMolKernelInterface* interface)
+{ 
+  QString error;
+
+  //if we didn't get any parameters, then send an error and return
+  pMolStackList* list = pMolStackList::interpretParameter(cmd, interface, (pMolObject*) this, error);
+  if (list==NULL) return makeError(interface, "findORF", error);
+
+  //there should be one number parameter
+  if (!list->checkParameter(0, pMolObject::DNA, error))
+     return makeError(interface, "findORF", error);
+  pMolElement* dna = dynamic_cast <pMolElement*> (list->at(0));
+
+  int n0;
+  //if there's one number parameter, cut bit off front or back depending if pos or neg
+  if (list->checkParameter(1, pMolObject::NUMBER, error))
+  { pMolStackNumber* number = dynamic_cast <pMolStackNumber*> (list->at(1));
+    n0=number->n;
+  } else
+  if (list->checkParameter(1, pMolObject::RAW, error))
+  { pMolElement* dna2 = dynamic_cast <pMolElement*> (list->at(1));
+    n0=dna->getSequence().indexOf(dna2->getSequence());
+    if (n0<0) return makeError(interface, "seg3", "sequence param 1 not found");
+  } else
+  if (list->checkParameter(1, pMolObject::DNA, error))
+  { pMolElement* dna2 = dynamic_cast <pMolElement*> (list->at(1));
+    int i,l;
+    if (!dna->getRelativeIndex(dna2, &i, &l ,error)) return makeError(interface, "seg3",error);
+    if (l<0) n0=i+l; else n0 = i;
+    //need to have something here to make sure the element is in this element
+    if ((n0<0)||(n0>dna->getLength())) return makeError(interface, "seg3", "sequence param 1 out of range");
+  } else
+  makeError(interface, "seg3", "param 1 not understood");
+
+  pMolLayer* layer = new pMolLayer();
+  layer->pMolParent = dna;
+  layer->setIndex(0);
+  layer->setLength(dna->getLength());
+
+  QString temp;
+  int l = ORFlength3(dna,n0);
+  interface->msg(name+"::ORF:"+temp.setNum(l)+";"+dna->getSequence(n0,24)+";"+translate(dna->getSequence(n0,24)));
+  pMolORF* orf = new pMolORF();
+  orf->pMolParent = dna;
+  orf->setIndex(n0);
+  orf->setLength(l);
+  orf->name = "ORF:"+temp.setNum(n0);
+  orf->codonCodexName = name;
+
+  layer->append((pMolElement*) orf);
+  return layer;
+};
+
+//--------------------------------------------------------------------------------------------------------------------
+///Finds ORFs and returns them as a layer to the parent molecule. Integer parameter as minimum length
+pMolStackObject* pMolCodonCodex::c_findORFs(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  //if we didn't get any parameters, then send an error and return
+  if (cmd==NULL) return NULL;
+  if (cmd->type() != pMolCmd::LIST) 
+  { interface->msg(name+"::translate - expecting parameter list");			return NULL;};
+
+  //interpret out paramaters, bailing if interpretation fails
+  pMolObject* object = interface->interpret(cmd, (pMolObject*) this);
+  if (object==NULL)
+  { interface->msg(name+"::translate - something went wrong with interpreting a list"); return NULL; };
+
+  //I hate doing this but cast up to an object list
+  pMolStackList* objectList = dynamic_cast <pMolStackList*>(object);
+
+  //check we have the correct number of parameters
+  if (objectList->length()<2 || objectList->length()>3) 
+  { interface->msg(name+"::translate - expected one parameter"); 			return NULL; };
+
+  //extract first parameter
+  if (!objectList->at(0)->type(pMolStackObject::DNA))
+  { interface->msg(name+"::translate - expected a dna object as parameter"); 		return NULL; };  
+  pMolElement* dna = dynamic_cast <pMolElement*> (objectList->at(0));
+ 
+  //extract second parameter
+  if (!objectList->at(1)->type(pMolStackObject::NUMBER))
+  { interface->msg(name+"::sequence - expected a number as second parameter");		return NULL; };
+  pMolStackNumber* minORF = dynamic_cast <pMolStackNumber*> (objectList->at(1));
+
+  int start;
+
+  if (objectList->length()==3)
+  {  if (!objectList->at(2)->type(pMolStackObject::NUMBER))
+     { interface->msg(name+"::sequence - expected a number as third parameter");	return NULL; };
+     pMolStackNumber* startObj = dynamic_cast <pMolStackNumber*> (objectList->at(1));
+     start = startObj->n;
+  }
+  else start = 0;
+
+  int i,l;
+  QString s;
+  QString temp;
+  pMolLayer* layer = new pMolLayer();
+  layer->pMolParent = dna;
+  layer->setIndex(0);
+  layer->setLength(dna->getLength());
+  i = start;
+  s = dna->getSequence(start, dna->getLength() - start);					//what about Martian DNA?
+  while (i < s.length())
+  { 
+    // qDebug() << "findORFs" << i;
+    if ((l = ORFlength(dna,i))>minORF->n)
+    { interface->msg(name+"::ORF:"+temp.setNum(i)+","+temp.setNum(l)+";"+dna->getSequence(i,24)+";"+translate(dna->getSequence(i,24)));
+      pMolORF* orf = new pMolORF();
+      orf->pMolParent = dna;
+      orf->setIndex(i);
+      orf->setLength(l);
+      orf->name = "ORF:"+temp.setNum(i);
+      orf->codonCodexName = name;
+      layer->append((pMolElement*) orf);
+    };
+    i++; 
+  };
+
+  if (!dna->isCircular()) return (pMolStackObject*) layer;
+
+  s = dna->getSequence(0,start-1);			//what about Martian DNA?
+  i = 0;
+  while (i < start)
+  { 
+    if ((l = ORFlength(dna,i))>minORF->n)
+    { interface->msg(name+"::findORFs found at ");
+      pMolORF* orf = new pMolORF();
+      orf->pMolParent = dna;
+      orf->setIndex(i);
+      orf->setLength(l);
+      orf->name = "ORF:"+temp.setNum(i);
+      orf->codonCodexName = name;
+      layer->append((pMolElement*) orf);
+    };
+    i++;  qDebug() << "findORFs" << i << l;;
+  };
+
+  return (pMolStackObject*) layer;
+};
+
+
+//--------------------------------------------------------------------------------------------------------------------
+///Translates and makes a peptide molecule
+pMolStackObject* pMolCodonCodex::translate(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  //if we didn't get any parameters, then send an error and return
+  if (cmd==NULL) return NULL;
+  if (cmd->type() != pMolCmd::LIST) 
+  { interface->msg(name+"::translate - expecting parameter list");			return NULL;};
+
+  //interpret out paramaters, bailing if interpretation fails
+  pMolObject* object = interface->interpret(cmd, (pMolObject*) this);
+  if (object==NULL)
+  { interface->msg(name+"::translate - something went wrong with interpreting a list"); return NULL; };
+
+  //I hate doing this but cast up to an object list
+  pMolStackList* objectList = dynamic_cast <pMolStackList*>(object);
+
+  //check we have the correct number of parameters
+  if (objectList->length()!=1) 
+  { interface->msg(name+"::translate - expected one parameter"); 			return NULL; };
+
+  //extract first parameter
+  if (!objectList->at(0)->type(pMolStackObject::DNA))
+  { interface->msg(name+"::translate - expected a dna object as parameter"); 		return NULL; };
+  pMolElement* dna = dynamic_cast <pMolElement*> (objectList->at(0));
+
+  //calulate distances from primers
+  QString s = dna->getSequence();
+  pMolPeptide* peptide = new pMolPeptide();
+  peptide->sequence = translate(s);
+  peptide->addComment("translation of "+dna->name);
+  interface->msg(peptide->sequence);
+
+  return (pMolStackObject*) peptide;
+};
+
+
+pMolStackObject* pMolCodonCodex::wobble(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  QString error;
+
+  //if we didn't get any parameters, then send an error and return
+  pMolStackList* list = pMolStackList::interpretParameter(cmd, interface,error);
+  if (list==NULL) return makeError(interface, "wobble", error);
+
+  //if there's one number parameter, cut bit off front or back depending if pos or neg
+  if (list->checkParameters(pMolObject::PEPTIDE, error)) 
+  {
+    pMolPeptide* peptide = dynamic_cast <pMolPeptide*> (list->at(0));
+    QString s = peptide->getSequence().toUpper();
+    qDebug() << s;
+    pMolCodonArray* codons1 = codeOptimizeSeqment(s);
+    qDebug() << "made it here";
+    interface->msg(name+"::wobble - this may take a while, make some tea!");
+    pMolCodonArray* codons2 = codeWobble(codons1);
+    interface->msg(codons1->sequence().toLower());
+    interface->msg(codons2->sequence().toLower());
+
+    pMolDNA* dna1 = new pMolDNA("x1", codons1->sequence().toUpper());
+    pMolORF* orf1 = new pMolORF("ORF:x1", 0, dna1->getLength(), name);
+    orf1->codonCodex = this;
+    dna1->append((pMolElement*) orf1);
+
+    pMolDNA* dna2 = new pMolDNA("x2", codons2->sequence().toUpper());
+    pMolORF* orf2 = new pMolORF("ORF:x2", 0, dna1->getLength(), name);
+    orf2->codonCodex = this;
+    dna2->append((pMolElement*) orf2);
+
+    pMolStackList* list = new pMolStackList();
+    list->append((pMolStackObject*) dna1);
+    list->append((pMolStackObject*) dna2);
+
+    return (pMolStackObject*) list;
+  }
+  else if (list->checkParameters(pMolObject::ORF, error))
+  {
+    //need to implement codon wobble here fixed to a sequence
+  }
+  else return makeError(interface, "wobble", error);
+};
+
+
+//--------------------------------------------------------------------------------------------------------------------
+///Translates and makes a peptide molecule
+pMolStackObject* pMolCodonCodex::code(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  QString error;
+
+  //if we didn't get any parameters, then send an error and return
+  pMolStackList* list = pMolStackList::interpretParameter(cmd, interface,error);
+  if (list==NULL) return makeError(interface,"code",error);  
+
+  //if there's one number parameter, cut bit off front or back depending if pos or neg
+  if (!list->checkParameters(pMolObject::PEPTIDE, error)) return makeError(interface,"code",error);
+
+  pMolPeptide* peptide = dynamic_cast <pMolPeptide*> (list->at(0));
+
+  QString s = peptide->getSequence().toUpper();
+  pMolDNA* dna = new pMolDNA();
+  pMolCodonArray* codons = codeOptimizeSeqment(s);
+  dna->sequence = codons->sequence().toUpper();
+  dna->addComment("reverse translation of "+peptide->name);
+  dna->setIndex(0);
+  dna->getLength();
+  delete codons;
+
+  pMolORF* orf = new pMolORF();
+  orf->name = peptide->name;
+  orf->setIndex(0);
+  orf->setLength(dna->getLength());
+  orf->codonCodex = this;
+  orf->codonCodexName = name;
+  dna->append((pMolElement*) orf);
+
+  interface->msg(dna->sequence);
+
+  return (pMolStackObject*) dna;
+};
+
+//-----------------------------------------------------------------------------------------------
+///executes commands referred to this object
+pMolStackObject* pMolCodonCodex::exec(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  //no paramaters, return this as object
+  if (cmd==NULL) return (pMolStackObject*) this;				//no paramaters, return me
+
+  //if no command but not empty, something is wrong (needs to be empty or have subcommand) so return with error
+  if (cmd->type() != pMolCmd::NAME)
+  { interface->msg(name+"::exec - empty field or subcommand expected");
+    return NULL;
+  };
+  //first let's look in our own little internal namespace
+  pMolCmdName* cmdName = dynamic_cast<pMolCmdName*>(cmd);					//safe to assume this is a pMolCmdName
+
+  if (cmdName->name=="findORF") 	return c_findORF(cmdName->child, interface);	else
+  if (cmdName->name=="findORFs") 	return c_findORFs(cmdName->child, interface);	else
+  if (cmdName->name=="translate") 	return translate(cmdName->child, interface);  	else
+  if (cmdName->name=="code")		return code(cmdName->child, interface);	else
+  if (cmdName->name=="wobble")		return wobble(cmdName->child, interface); 	else
+  if (cmdName->name=="debug")		return debug(cmdName->child, interface);	else
+  interface->msg(name+"::command not understood");
+  return NULL;
+};

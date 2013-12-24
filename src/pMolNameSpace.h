@@ -1,0 +1,69 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLNAMESPACE_H
+#define PMOLNAMESPACE_H
+
+#include <QHash>
+#include <QString>
+#include <QtXml/QXmlSimpleReader>
+
+#include "pMolStackObject.h"
+#include "pMolXMLbase.h"
+#include "XmolHandler.h"
+#include "pMolDNA.h"
+#include "pMolCodonCodex.h"
+#include "pMolKernelInterface.h"
+#include "vSequenceMap.h"
+#include "vInspector.h"
+#include "rawSeq.h"
+#include "pMolStackObject.h"
+#include "pMolPCRengine.h"
+#include "pMolRestrictionEndonuclease.h"
+#include "pMolMolecularEngine.h"
+
+#include <QMutex>
+#include <qsqldatabase.h>
+#include <qsqlquery.h>
+
+///this handles the name space
+class pMolNameSpace : public pMolXMLbase
+{
+  public:
+    pMolNameSpace(pMolKernelInterface* p_interface);
+    ~pMolNameSpace();
+
+    virtual pMolXMLbase* XMLopen(const QString &tag, QString &error);
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+
+    pMolStackObject* lookUp(const QString &name);
+    pMolStackObject* exec(pMolCmdName* cmd);
+    void enter(QString name, pMolStackObject* object);
+
+  protected:
+    QMutex mutex;
+    bool createConnections();
+    pMolStackObject* error(pMolKernelInterface* interface, QString e);
+    pMolStackObject* member(pMolKernelInterface* interface, pMolCmd* cmd);
+    pMolStackObject* nascentObject;
+    pMolKernelInterface* interface;
+    QHash <QString, pMolStackObject*> hashTable;
+};
+
+#endif

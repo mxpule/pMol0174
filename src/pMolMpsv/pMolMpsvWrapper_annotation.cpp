@@ -1,0 +1,209 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#include "pMolMpsv/pMolMpsvWrapper_annotation.h"
+
+//--------------------------------------------------------------------------------------------
+///constructors and desctructors
+pMolMpsvWrapper_annotation::pMolMpsvWrapper_annotation(pMolAnnotation* p_annotation)
+ : pMolMpsvWrapper()
+{
+  int i;
+  annotation = p_annotation;
+  mutateKeyObject = annotation->getMutateKey();
+  fillColor = QColor(146, 235, 27, 0xff);	//default color for primer
+  textColor = QColor(0x00, 0x00, 0x00, 0xff); 	//default text color for primer
+
+  //bind up the elements
+  pMolElement* element;  i = 0;
+  while ((element = annotation->n_getElement(i++))!=NULL)
+  { pMolMpsvWrapper* wrapper = pMolMpsvWrapper::bind(element);
+    if (wrapper!=NULL) elements.append(wrapper);
+  }; 
+
+  //bind up the layers
+  pMolElement* layer;  i = 0;
+  while ((layer = annotation->n_getLayer(i++))!=NULL)
+  { pMolMpsvWrapper* wrapper = pMolMpsvWrapper::bind(layer);
+    if (wrapper!=NULL) layers.append(wrapper);
+  }; 
+};
+
+pMolMpsvWrapper_annotation::~pMolMpsvWrapper_annotation()
+{
+  //delete all the elements
+  while (!elements.isEmpty()) 
+  { pMolMpsvWrapper* wrapper = elements.takeFirst();
+    delete wrapper;
+  };
+
+  //delete all the layers
+  while (!layers.isEmpty()) 
+  { pMolMpsvWrapper* wrapper = layers.takeFirst();
+    delete wrapper;
+  };
+};
+
+//--------------------------------------------------------------------------------------------
+///return length and index of wrapped pMol object
+int pMolMpsvWrapper_annotation::getIndex()
+{
+  return annotation->getIndex();
+};
+
+int pMolMpsvWrapper_annotation::getLength()
+{
+  return annotation->getLength();
+};
+
+QString pMolMpsvWrapper_annotation::getName()
+{
+  return annotation->getName();
+};
+
+//---------------------------------------------------------------------------------------------
+///get element from Elements or from layers!
+pMolMpsvWrapper* pMolMpsvWrapper_annotation::getElement(int i)
+{
+  int count = elements.count();
+  if (i<count) return elements.at(i);
+
+  foreach (pMolMpsvWrapper* layer, layers)
+  { i -= count;
+    count = layer->getElementCount();
+    if (i < count) return layer->getElement(i);
+  };
+
+
+  return NULL;
+};
+
+bool pMolMpsvWrapper_annotation::refresh()
+{
+   int i = 0;				//counter
+
+   //have we changed? in this case we have to rebuild everything
+   if (annotation->mutated(mutateKeyObject))
+   {
+     while (!elements.isEmpty())
+     { pMolMpsvWrapper* wrapper = elements.takeFirst();
+       delete wrapper;
+     };
+
+     while (!layers.isEmpty())
+     { pMolMpsvWrapper* wrapper = layers.takeFirst();
+       delete wrapper;
+     };
+
+     pMolElement* element;  i = 0;
+     while ((element = annotation->n_getElement(i++))!=NULL)
+     { pMolMpsvWrapper* wrapper = pMolMpsvWrapper::bind(element);
+       if (wrapper!=NULL) elements.append(wrapper);
+     };
+
+     pMolElement* layer;  i = 0;                 //bind up the layers
+     while ((layer = annotation->n_getLayer(i++))!=NULL)
+     { pMolMpsvWrapper* wrapper = pMolMpsvWrapper::bind(layer);
+       if (wrapper!=NULL) layers.append(wrapper);
+     };
+
+     mutateKeyObject = annotation->getMutateKey(); //reset key
+
+     return true;
+   };
+
+   //otherwise iterate and see if any individual element has changed
+
+   bool mutated = false;                //accumulator
+   pMolMpsvWrapper* wrap;		//place for children wrapper pointers
+   while ((wrap=getElement(i++))!=NULL)	//until we reach the end
+      mutated = mutated || (wrap->refresh());	//if any has changed return true
+
+   //return the accumulated results
+   return mutated;                      //return accumulator
+};
+
+
+//---------------------------------------------------------------------------------------------------
+///make the graphical object
+pMolMpsvGlob* pMolMpsvWrapper_annotation::makeGlob(int i0, int i1, pMolMpsvStyle* style, bool root)
+{
+  //if invisible, don't do anything
+  if (!visible) return NULL;
+
+  int i, l;
+  bool clip5, clip3, minor;
+  float uc = style->uc;
+
+  //are we within range? if so have we been clipped and how?
+  if (!clip(i0,i1, annotation->getIndex(), annotation->getLength(), &i, &l, &clip5, &clip3, &minor)) 
+    return NULL;
+
+  //get pen and brush and initialize glob
+  QPen pen(textColor);
+  QBrush brush(fillColor);
+  pMolMpsvGlob* glob = new pMolMpsvGlob(this, style, i0, i, 2);
+
+  //if this is the root drawing, draw only the sequence, otherwise draw only annotation
+  if (root) 
+  {
+    glob->addSequenceText(i0, 0,0,annotation->getSequence(i,l).toLower(), textColor);
+  } 
+
+  else
+  {
+    float ii, ll;
+    //is the 5' end clipped?
+    if (!clip5) 
+    { ii = 0.5;
+      glob->addRectItem(0.1*uc,-1.25*uc,0.4*uc,1.4*uc, brush);		//if 5' end not clipped, 
+    } else ii = 0.0;
+
+    //is the 3' end clipped?
+    if (clip3) ll = l - ii;
+    else 
+    { ll = l - ii - 0.5;
+      glob->addRectItem((l-0.5)*uc,-1.25*uc,0.4*uc,1.4*uc, brush);	//do the 3' end if not clipped
+    };
+
+    //the annotation bar
+    glob->addRectItem(ii * uc, -uc, ll*uc, uc, brush);		//the line of the annotation
+
+    //render the text of the annotation
+    int w = glob->getAnnotationTextWidth(annotation->getName());	//to see how wide the text is
+    if (w < l*uc) 						//if it fits, render it on the bar
+      glob->addAnnotationText((l*uc-w)/2.0, -0.8*uc, annotation->getName(), textColor);
+    else if (!minor)						//if doesn't fit and this isn't a minor fragment
+      glob->addAnnotationText((l*uc-w)/2.0, -1.5*uc, annotation->getName(), textColor); 
+  };
+
+  //if recursive through annotations, then recurse through 
+  int n=0;
+  if (recurse)
+  {
+    pMolMpsvWrapper* wrapper;
+    while ((wrapper=getElement(n++))!=NULL)
+      glob->addGlob(wrapper->makeGlob(i, i+l, style, false));
+  };
+
+  //minimze the glob to smallest height and return
+  glob->minimize();
+  return glob;
+};
+

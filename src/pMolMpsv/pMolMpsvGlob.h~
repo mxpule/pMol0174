@@ -1,0 +1,116 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLMPSVGLOB_H
+#define PMOLMPSVGLOB_H
+
+#include <QtGui>
+#include <QRectF>
+#include <QObject>
+#include <QGraphicsScene>
+
+#include "pMolMpsv/pMolMpsvMask.h"
+#include "pMolMpsv/pMolMpsvWrap.h"
+#include "pMolMpsv/pMolMpsvStyle.h"
+
+///class for accumulating graphics items. Each glob will represent an anotation, an orf etc. A glob can 
+///accumulate multiple globs by using add(glob). These can be fitted together in the most compact way by 
+///calling minimize(). Normalize() transforms the glob within its own representation so the upper left
+///of its bounding box is (0,0). Compact() frees up the considerable amount of memory needed (i.e. masks,
+///and paths) to do the minimization.
+class pMolMpsvGlob : public QGraphicsItem
+{
+
+  public:
+    pMolMpsvGlob(pMolMpsvWrap* p_parentWrapper,pMolMpsvStyle* p_style,int i0,int i,int p_priority);
+    virtual ~pMolMpsvGlob();
+
+    int getX();
+    int getDir();
+    int getPriority();
+    pMolMpsvMask* getMask();
+
+    virtual QRectF* getBoundingRect();
+
+    virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
+
+//    virtual QRectF boundingRect () const;
+
+    ///gets the length of sequence text
+    int getSequenceTextWidth(const QString &text);
+
+    ///gets the length of annotation text
+    int getAnnotationTextWidth(const QString &text);
+
+    ///draw text for sequence representation
+    void addSequenceText(qreal x, qreal y, const QString &text, const QColor &color);
+
+    ///draw text for annotation representation
+    void addAnnotationText(qreal x, qreal y, const QString &text, const QColor &color);
+
+    ///draw and ellipse
+    void addEllipseItem(qreal x, qreal y, qreal w, qreal h, const QBrush &brush);
+
+    ///draw an arrow pointing right 
+    void addRightArrow(qreal x, qreal y, qreal w, qreal h, const QBrush &brush);
+
+    ///draw a rectangular item
+    void addRectItem(qreal x, qreal y, qreal w, qreal h, const QBrush &brush);
+
+    ///adds a child glob to this glob. *Note* won't be drawn until minimize() is called.
+    void addGlob(pMolMpsvGlob* glob);
+
+    ///positions child globs in the most aesthetic way possible and actually attaches them
+    ///as child QGraphicsItems. 
+    void minimize();
+
+    ///frees up any unused memory (i.e. the mask) now that optimization is done. You still need
+    ///the mask if this glob is being minimized by a parent glob, so don't call this directly,
+    ///let the parent call it when its minimize is done.
+    void compact();
+
+    ///transforms so that bounding box top left is (0,0)
+    void normalize();
+
+//  signals:
+//    void mouseEvent(QGraphicsSceneMouseEvent* event);
+
+ //
+   virtual void mousePressEvent(QGraphicsSceneMouseEvent* event);
+
+  private:
+    int x;
+    int dir;
+    int priority;
+    float uc, uca;
+    QRectF boundingRectValue;
+    pMolMpsvMask* mask;
+    pMolMpsvStyle* style;
+    pMolMpsvWrap* parentWrapper;
+    QList <pMolMpsvGlob*> globs;	
+
+    static const int iterateMax = 0x0060;
+    static const float Z_annotationText = 16.0;
+    static const float Z_sequenceText = 15.0;
+    static const float arg = 1231313.2323;
+
+    int rnd(int max);
+};
+
+#endif

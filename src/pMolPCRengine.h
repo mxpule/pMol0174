@@ -1,0 +1,112 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLPCRENGINE_H
+#define PMOLPCRENGINE_H
+
+#include <QString>
+#include <math.h>
+
+#include "pMolStackObject.h"
+#include "pMolDNA.h"
+#include "pMolPrimer.h"
+#include "pMolKernelInterface.h"
+#include "pMolRestrictionEndonuclease.h"
+#include "pMolCmd.h"
+
+///Calculates melting temperatures by nearest neighbour and does PCR cloning stuff
+///This is based on MELTING v4.2 Copyright (C) Nicolas Le Nov�1997-2002 under GPL
+///an instance of this class loads up basic data like salt concentration etc
+///and an experimentally derived duplex entropy / enthalpy look-up table from a XML file
+class pMolPCRengine : public pMolStackObject
+{
+  public:
+    pMolPCRengine();
+    pMolPCRengine(pMolXMLbase * p_p_MolXMLbaseParent);
+
+    virtual pMolXMLbase* XMLopen(const QString &tag, QString &error);
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual pMolStackObject* exec(pMolCmd* cmd, pMolKernelInterface* interface);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    virtual bool type(int i);
+
+    pMolStackObject* fuse(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* melting(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* sequence(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* badness(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* frag(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_prime(pMolCmd* cmd, pMolKernelInterface* interface); 
+    pMolStackObject* display(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolAnnotation* annotate(pMolElement* dna, int index, int length, const QString &name, const QString &comment);
+    pMolPrimer* annotatePrimer(pMolElement* dna, int index, int length, const QString &name, const QString &comment);
+
+    QString hybridationType;			///dna-dna, dna-rna or rna-rna. This does nothing yet
+    QString nucleicAcidCorrectionMethod;	///different methods to correct
+    QString saltCorrectionMethod;		///different methods to correct for salt concentration
+    double nucleicAcidConcentration;		///oligo concentration in Moles
+    double saltConcentration;			///salt concentration in Moles
+    double sequencingPrimerTm;			///default sequencing primer Tm
+    double cloningPrimerTm;			///default cloning primer Tm
+    double maxTmWobble;				///how much difference in Tm from ideal tolerated
+    int sequenceWobble;				///how much from ideal location should sequencing primers move about
+    int sequencerPadding;			///how many bases on your sequencer before you get a clear signal
+    int sequencerLength;			///how many clear bases you typically get off your sequencer
+    int minPrimerLength;			///what's the shortest primer we tolerate
+    int maxPrimerLength;			///what's the maximum primer length we tolerate
+    int maxSyntheticLength;			///maximum synthetic padding allowed
+    int cloningPrimerPadding;			///padding from non-explicit ends
+    int fragmentMinLength;			///minimum length of frag oligo
+    int fragmentMaxLength;			///maximum length of frag oligo
+    double fragmentPrimerTm;			///ideal Tm for fragment concatenation
+    int fragmentSegLength;			///size of segments to be optimized for fragmentation (a.k.a. how many years do I want to wait)
+    QString hybridationTableName;		///name of hybridisation table
+    QString hybridationTableComment;		///some details of where this data was experimentally derived
+    static const double d_gnat=4.0; 		///DEFAULT_NUC_CORR as suggested by LeNov's melting v4.2
+    static const double impossiblyBad=999999999999999999999999.0;///An impossibly bad number
+
+  protected:
+   QTime timer;
+   unsigned int counter;
+   unsigned long int superCounter;
+   double iterations;
+   unsigned int iterationTick;
+
+   double entropyEnd[4];
+   double enthalpyEnd[4];
+   double entropyDuplex[16];
+   double enthalpyDuplex[16];
+   bool aquiringHybridationData;
+   double* entropyTarget;
+   double* enthalpyTarget;
+   double dummy;
+   pMolXMLbase* aquireHybridationData(const QString &tag, const QString &data, QString &error);
+   bool convertToByte(const QString &s, short int buffer[]);
+   double getBadness(short int* b, int length);
+   double getDoubleBadness(short int* b, int length);
+   double melting(const QString &s);
+   double melting(short int* buffer, int i0, int i1);
+   double nicePrimerFree(QString s, double p_Tm, int* i0, int* i1);
+   double nicePrimerLeft(QString s, double p_Tm, int* i1);
+   double nicePrimerMid(QString s, double p_Tm, int* i0, int* i1);
+   double fragTmBadness(short int* dna, int i, int j);
+   void fragTry(pMolKernelInterface* interface, short int* dna, int segment, int i, int* path, double badness, int* bestPath, int *bestI, double* bestBadness);
+
+};
+
+#endif

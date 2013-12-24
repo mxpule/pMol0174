@@ -1,0 +1,117 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#include "pMolBatch.h"
+
+//--------------------------------------------------------------------------------------------------
+///constructors and destructors
+pMolBatch::pMolBatch() : pMolStackObject(NULL) {};
+
+pMolBatch::pMolBatch(pMolXMLbase *p_pMolXMLbaseParent) : pMolStackObject(p_pMolXMLbaseParent) { };
+
+pMolBatch::~pMolBatch() {};
+
+//--------------------------------------------------------------------------------------------------
+///handle XML close stream
+pMolXMLbase* pMolBatch::XMLclose(const QString &tag, const QString &data, QString &error)
+{
+  if (tag=="language") 			language = data; 
+  else if (tag=="command")   		commands.append(data); 
+  else return pMolXMLbase::XMLclose(tag, data,error);
+  return (pMolXMLbase*) this; 
+}
+
+//--------------------------------------------------------------------------------------------------
+///output XML data as a tree structure
+void pMolBatch::treeOut(QTreeWidgetItem *tree)
+{
+  pMolXMLbase::treeOut(tree);
+  treeItem(tree,"language",language);
+
+  foreach (QString command, commands) treeItem(tree, "command", command);
+};
+
+
+//--------------------------------------------------------------------------------------------------
+///returns type information for execution, dynamic casting etc
+bool pMolBatch:: type(int i)
+{
+  if (i==pMolObject::BATCH) 		return true;	else
+  if (i==pMolObject::EXEC) 		return true; 	else
+  return pMolStackObject::type(i);
+}
+
+
+
+pMolStackObject* pMolBatch::run(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  foreach (QString command, commands)
+  { 
+    interface->msg(command);
+    interface->command(command);
+  };
+};
+
+bool pMolBatch::saveContents(QTextStream* stream)
+{
+  XMLsave(stream, "name", name);
+  XMLsave(stream, "comment", comment);
+  XMLsave(stream, "language", language);
+  foreach (QString command, commands) XMLsave(stream,"command",command);
+  return true;
+};
+
+
+bool pMolBatch::save(QTextStream* stream)
+{
+  XMLsaveOpen(stream, "pMolBatch");
+  saveContents(stream);
+  XMLsaveClose(stream,"pMolBatch");
+  return true;
+};
+
+pMolStackObject* pMolBatch::save(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+   pMolStackObject::save(); 
+  interface->msg(name+"::save - complete");
+  return NULL;
+};
+
+
+//-----------------------------------------------------------------------------------------------
+///executes commands referred to this object
+pMolStackObject* pMolBatch::exec(pMolCmd* cmd, pMolKernelInterface* interface)
+{
+  //no paramaters, return this as object
+  if (cmd==NULL) return (pMolStackObject*) this;				//no paramaters, return me
+
+  //if no command but not empty, something is wrong (needs to be empty or have subcommand) so return with error
+  if (cmd->type() != pMolCmd::NAME)
+  { interface->msg(name+"::exec - empty field or subcommand expected");
+    return NULL;
+  };
+  //first let's look in our own little internal namespace
+  pMolCmdName* cmdName = dynamic_cast<pMolCmdName*>(cmd);					//safe to assume this is a pMolCmdName
+
+  if (cmdName->name=="run") 		return run(cmdName->child, interface);		else
+  if (cmdName->name=="save")		return save(cmdName->child, interface);	else
+  interface->msg(name+"::command not understood");
+  return NULL;
+};

@@ -1,0 +1,152 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLSYNTHETICENGINE_H
+#define PMOLSYNTHETICENGINE_H
+
+#include <QString>
+#include <QtGui>
+
+#include <math.h>
+
+#include "pMolDNA.h"
+#include "pMolPeptide.h"
+#include "pMolStackObject.h"
+#include "pMolSynthetics/pMolSynthArray.h"
+#include "pMolSynthetics/pMolSynthFlatArray.h"
+
+///this is a codon optimizer. It does three kinds of optimizations: <ul><li>from a raw amino acid sequence <li>from a pre-determined sequence, making an optimal wobbled sequence, sufficiently different from the original and <li>from a raw amino acid sequence makes a number of dna sequences, sufficiently different from each other</ul><br> 
+///Since optimizations are mostly local, we first exhaustively works out local problems: <ul><li>forbidden sequences you specify (e.g. restricton sites)<li>codon usage<li>hairpins<li>repeated bases<li>short repeats<li>base content<li>cryptic splicing</ul>We also need to do some other Hidden Markov Model searching for these other motifs (not-implemented yet):<ul><li>TATA boxes<li>ribosomal re-entries<li><i>are </i> sequences<li><i>ins  </i>sequences<li><i>crs </i>sequences</ul><br>
+///Then it finds repeated sequences (should be unlikely, unless there are repeated amino acid motifs). Since this is a non-local problem, a recursive monte-carlo approach is used, targetting problem sequences to optimize further through the whole range of un-masked sequence.<br><br>
+///Parameters are pre-set in XML. Picking the codon usage table, markov model parameters for splice-site searching, PCRengine for fragmenting to oligos. Penalty scoring for each of these facets can be turned off / on (e.g. prokaryotes won't need splice-searching).<br><br>
+///A mask is provided, so that you can specifiy areas you don't want it to change, but so that the synthetic sequence is in harmony with the fixed sequence. This can be useful for example if you've already codon-optimized a segment of a gene but don't want to go to the trouble of synthesizing the whole lot again!<br><br>
+///Weighting is adjusted by parameters <i>penaltyExp</i>, <i>penaltyLin</i> and <i>threshold</i> (described above also), for each type of problem. First, <i>delta</i> is calculated as the difference from <i>threshold</i>, e.g. if hairpin loop length 12 is found, <i>threshold</i> is 8 then <i>delta</i> is 4. Penalty is now calculated as: <ul><li>sum of all f(delta) = penaltyLin.(delta^penaltyExp)</ul>In this way, you can decide how to score a problem. Here are some examples: <ul><li>Just a fixed penalty of 10 each time encountered: <i>penaltyExp</i>=0; <i>penaltyLin</i>=10; <li>Badness is linear so increase penalty linearly with slope 5: <i>penaltyExp</i>=1; <i>penaltyLin</i>=5;<li>Can tolerate a bit, but want to discourage longer occurences: <i>penaltyExp</i>=4; <i>penaltyLin</i>=1.2;</ul><br>
+///There are a lot of codon-optimizers out there! It's very difficult to know what is important and what isn't unless someone just does the experiments and compares all these different facets. Unfortunately, they would be the most boring experiments in the world, and I don't want to do them!!! I've implemented the ones I think are more important. You can always switch them off or increase their significance. I wrote this code just to have control over the design of the many sequences I want to make. Feel free to contribute!.<br>
+class pMolSyntheticEngine : public pMolStackObject
+{
+  public :
+
+
+
+    bool marking;
+
+    QString pcrEngineName;			///which PCR engine shall we use?
+    QString codonCodexName;			///which codon usage table shall we use then?
+
+    int wobbleDifferenceThreshold;		///if we're wobbling below what % similarity is ok?
+
+    bool useCodonBadness;			///do we use codon Optimization penalty scoring?
+    double codonPenaltyLin;			///Linear penalty scoring for codon usage
+    double codonPenaltyExp;			///Exponential penalty scoring for codon usage
+
+    bool useHairpinBadness;			///do we use local hairpin penalty scoring?
+    double hairpinPenaltyLin;			///Linear penalty scoring for hairpins
+    double hairpinPenaltyExp;			///Exponential penalty scoring for hairpins
+    int hairpinStemMin;				///shortest step of hairpin
+    int hairpinStemMax;				///if the stem is longer than this, ribosome should handle it fine
+    int hairpinLengthThreshold;			///shortest hairpin to worry about
+    int hairpinAbortThreshold;			///maximum length threshold allowed
+
+    bool useRepeatBaseBadness;			///do we use repeated base penalty scoring?
+    int repeatBaseThreshold;			///The shortest repeat we worry about?
+    int repeatBaseAbortThreshold;		///The longest repeat length allowed
+    double repeatBasePenaltyLin;		///Linear penalty score for base repeats
+    double repeatBasePenaltyExp;		///Exponential penalty score for base repeats
+
+    bool useRepeatBaseTypeBadness;
+    int repeatBaseTypeThreshold;		///The shortest repeat we worry about?
+    int repeatBaseTypeAbortThreshold;		///The longest repeat length allowed
+    double repeatBaseTypePenaltyLin;		///Linear penalty score for base repeats
+    double repeatBaseTypePenaltyExp;		///Exponential penalty score for base repeats
+
+    bool useBaseContentBadness;			///do we use penalty scoring for base-pair content of sequence?
+    int idealGCpercent;				///ideal GC content percentage
+    int GCpercentDeltaThreshold;		///Deviation from ideal GC content we worry about
+    int GCpercentAbortThreshold;		///Deviation from ideal above which is unacceptable
+    double baseContentPenaltyLin;		///Linear penalty score for base content
+    double baseContentPenaltyExp;		///Exponential penalty score for base content
+
+    bool useCrypticSpliceBadness;		///do we use
+    QString splicingPredictorName;		///what HMM splicing predictor shall we use?
+    double crypticSpliceThreshold;		///what probability of splicing 
+    double crypticSpliceAbortThreshold;		///what probabilty of splicing is unacceptable?
+    double crypticSplicePenaltyLin;		///Linear penalty score for cryptic splicing
+    double crypticSplicePenaltyExp;		///Exponential penalty score for cryptic splicing
+
+    bool useRepeatBadness;			///do we use repeats penalty scoring
+    int repeatThreshold;			///Smallest repeat we worry about
+    int repeatAbortThreshold;			///Repeat length above which is unacceptable
+    double repeatPenaltyLin;			///Linear penalty score for repeats
+    double repeatPenaltyExp;			///Exponential penalty score for repeats
+
+    pMolSyntheticEngine();
+    pMolSyntheticEngine(pMolXMLbase *p_pMolXMLbaseParent);
+    ~pMolSyntheticEngine();
+
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    virtual bool type(int i);
+
+    pMolStackObject* synth(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* synth(pMolKernelInterface* interface, pMolORF* orf, pMolCodonCodex* codonCodex, pMolLayer* layer);
+    pMolStackObject* synth(pMolKernelInterface* interface, pMolPeptide* peptide, pMolCodonCodex* codonCodex, pMolStackList* list);
+    pMolStackObject* c_restrict(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* c_rtrans(pMolCmd* cmd, pMolKernelInterface* interface);
+
+    virtual pMolStackObject* exec(pMolCmd* cmd, pMolKernelInterface* interface);
+
+  protected:
+    static const int base_a = 1;
+    static const int base_t = 2;
+    static const int base_c = 4;
+    static const int base_g = 8;
+    short int complement[16];
+
+    double* repeatBaseBadnessTable;
+    double* repeatBaseTypeBadnessTable;
+    double* baseContentBadnessTable;
+    double codonUsageBadnessTable[64];
+    static const int segLength = 16;
+
+
+    void makeLookupTables(int segLength);
+    void deleteLookupTables();
+    void mark(int index, int length, const QString &name);
+
+    void forbiddenSetup(pMolStackList* list);
+    bool forbiddenTest(pMolSynthArray* array);
+    void forbiddenCleanup();
+    bool forbiddenActive;
+    QList <pMolSynthFlatArray*> forbiddenList;
+
+    bool repeatBaseBadness(pMolSynthArray* seq, double* badness);
+    bool repeatBaseBadness2(pMolSynthArray* seq, double* badness);
+    bool baseContentBadness(pMolSynthArray* seq, double* badness);
+    bool hairpinBadness(pMolSynthArray* seq, double* badness);
+    bool getTotalBadness(pMolSynthArray* seq, bool virgin, double *badness, double *bestBadness);
+    int searchRestriction(short int* s, short int*r, int I, int slength, int rlength);
+
+
+    void report
+    ( pMolKernelInterface* interface, long unsigned int superCounter, 
+      int i const QString &seq, double bestBadness);
+
+};
+
+#endif

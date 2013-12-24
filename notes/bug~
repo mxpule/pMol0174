@@ -1,0 +1,2 @@
+2006-08-16 The mpSV module pulls out sequences over the end when rendering the last line. X
+2006-08-18 The mpSV module clips top element too early now that negative allowed

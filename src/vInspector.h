@@ -1,0 +1,59 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef VINSPECTOR_H
+#define VINSPECTOR_H
+
+#include <QString>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QtGui>
+
+
+#include "pMolKernelInterface.h"
+#include "pMolCmd.h"
+#include "pMolStackObject.h"
+
+
+class QSignalMapper;
+
+
+///this is an object inspector. It will be fundamental to this creation making hierarchical
+///objects including namespaces and command trees easy to inspect. At some stage I will make
+///it so that the objects can be modified manually with this!!!
+///I can't think of a good short catchy name for it - hInsp (hierarchical), oInsp????
+class vInspector : public  QObject, pMolStackObject
+{
+  Q_OBJECT
+
+  public :
+    vInspector(pMolObject* object);
+    virtual bool type(int);
+    static vInspector* create(pMolKernelInterface* interface, pMolCmd* cmd);
+
+  private slots:
+    void handleItemPressed ( QTreeWidgetItem * item, int column );
+
+  protected :
+    QTreeWidget* treeWidget;
+    pMolKernelInterface *interface;
+};
+
+#endif

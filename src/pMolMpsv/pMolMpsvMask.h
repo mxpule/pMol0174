@@ -1,0 +1,97 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PMOLMPSVMASK_H
+#define PMOLMPSVMASK_H
+
+#include <QRectF>
+///this class provides a representation of the outline of a glob. It allows other globs
+///to be fitted onto it and is designed to work in linear time no matter what the complexity
+///of the glob is. Having said that it only represents and outline - not holes by representing
+///the space as a series of strips, storing if the strip is used, what the highest point and
+///what the lowest point in it is. This may seem like an overly simple way of doing it, but
+///when each strip represents one dna base, it makes the whole system very efficient.
+class pMolMpsvMask
+{
+  public:
+    ///constructor, needs universal constant
+    pMolMpsvMask(float p_uc);
+
+    ///destructor
+    ~pMolMpsvMask();
+
+    ///is this strip used?
+    bool getUse(int x);
+
+    ///what's the highest point on this strip?
+    int getTop(int x);
+
+    ///what's the lowest point on this strip
+    int getBot(int x);
+
+    ///how wide is the whole mask?
+    float getWidth();
+
+    ///how high is the whole mask?
+    float getHeight();
+
+    ///fills rect with bounding details
+    void setRect(QRectF &rect);
+
+    ///reset - all cleared
+    void reset();
+
+    ///translates to (0,0) top 
+    float normalize();
+
+    ///merge in a rectangular mask 
+    void addMask(float p_x, float p_y, float p_w, float p_h);
+
+    ///merge in another mask in the same orientation offset to p_x and p_y
+    void addMaskPos(float p_x, float p_y, pMolMpsvMask* mask);
+
+    ///merge in another mask 180 degrees rotated offset to p_x and p_y
+    void addMaskNeg(float p_x, float p_y, pMolMpsvMask* mask);
+
+    ///fit a mask as snuggly as possible returning the minimum offset upwards
+    float fitPos(int x, pMolMpsvMask* mask);
+
+    ///fit mask 180degrees as snuggly as possible returning offset downwards
+    float fitNeg(int x, pMolMpsvMask* mask);
+
+    ///copy into a new object
+    pMolMpsvMask* copy();
+
+    ///copy into an existing object
+    pMolMpsvMask* copy(pMolMpsvMask* to);
+
+  private:
+    float uc;				//universal constant
+    int x0,x1,y0,y1;			//top left and bottom right corners
+    static const int max = 1024;	//max number of strips (max*uc pixels)
+    bool use[max];			//array to store if strip used
+    short int top[max];			//array to store top of strips
+    short int bot[max];			//array to store bottom of strips
+    bool virgin;			//flag so we know if this is the first entry
+
+    void setMask(int x, int p_top, int p_bot);
+};
+
+#endif

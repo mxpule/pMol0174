@@ -1,0 +1,95 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLSYNTHARRAY_H
+#define PMOLSYNTHARRAY_H
+
+#include <QString>
+#include <QtGui>
+
+#include "pMolElement.h"
+#include "pMolPeptide.h"
+#include "pMolCodon.h"
+#include "pMolCodonCodex.h"
+#include "pMolORF.h"
+
+#include "pMolError/pMolError.h"
+#include "pMolSynthetics/pMolSynthFlatArray.h"
+
+///This class is used exclusively by pMolSyntheticEngine. It conveniently links an array of codons to a raw sequence to allow rapid codon flipping and penalty score calculations. It has a mask to mark out residues which cannot be changed, and indices representing a frame which point to a part of the sequence currently being manipulated
+class pMolSynthArray
+{
+  public:
+    pMolSynthArray
+    (int p_length, double* p_codonPenaltyTable, pMolSynthFlatArray* p_forbidden);
+
+    pMolSynthArray
+    ( pMolCodonCodex* codonCodex, pMolElement* orf, double* p_codonPenaltyTable);
+
+    pMolSynthArray
+    ( pMolCodonCodex* codonCodex, pMolPeptide* peptide, 
+      double* p_codonPenaltyTable, pMolSynthFlatArray* p_forbidden);
+
+    ~pMolSynthArray();
+
+    int getLength();			///get the length of this array (i.e. number of codons)
+    double getBadness();		///get the cumulative codon badness within the frame
+    int getFrameEnd();			///get the index of the frame's end
+    int getFrameIndex();		///get the index of the frame's start
+    int getFrameLength();		///get the length of the frame in codons
+    QString getSequence();		///get a string representation of the sequence
+    short int *getFrameStart();		///get the address of the byte data representing the sequence
+    bool setFrame(int p_frameIndex, int p_frameEnd);
+
+    void setMask(int i, bool state);
+    void setCodon(int i, pMolCodon* codon);
+    void setMask(int i, int j, bool state);
+    bool flip(int i);
+    bool flip();
+    void reset();
+    void reset(int p_resetIndex, int p_resetEnd);
+    pMolSynthArray* copy(pMolSynthArray* dest);
+    int compare(pMolSynthArray* compareArray);
+
+
+
+  private:
+    double* codonPenaltyTable;
+    int length;				//number of codons in the array
+    int frameIndex;			//start of the current frame
+    int frameEnd;			//end of the current frame
+    bool* mask;				//buffer containing mask: false leave alone, true can flip!
+    short int* coding;			//buffer containing byte representation of sequence
+    pMolCodon** codons;			//buffer containing the codons
+    double badness;			//cumulative badness of codons within the frame
+    double getCodonBadness(int i);
+
+    unsigned int* suffixArray;
+    int suffixArrayMax;
+    int suffixArrayNextFreeNode;
+
+    void suffixTreeAllocate();
+    void suffixTreeBuild();
+    bool suffixTreeFind();
+
+    pMolSynthFlatArray* forbidden;
+    void suffixTreeDelete();		//list of forbidden sequences
+};
+
+#endif

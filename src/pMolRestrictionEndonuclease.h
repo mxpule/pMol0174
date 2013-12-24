@@ -1,0 +1,103 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Martin Pule   *
+ *   martin@pulecyte.com   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifndef PMOLRESTRICTIONENDONUCLEASE_H
+#define PMOLRESTRICTIONENDONUCLEASE_H
+
+#include <QString>
+#include <math.h>
+
+#include "pMolXMLbase.h"
+#include "pMolStackObject.h"
+#include "pMolDNA.h"
+#include "pMolKernelInterface.h"
+#include "pMolLayer.h"
+
+///simple class for storing list of buffer and activity in pMolRestrictionEndonuclease
+class pMolRestrictionEndonucleaseBuffer : public pMolXMLbase
+{
+  public:
+    pMolRestrictionEndonucleaseBuffer();
+    pMolRestrictionEndonucleaseBuffer(pMolXMLbase * p_p_MolXMLbaseParent);
+
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual void treeOut(QTreeWidgetItem *tree);
+
+    int activity;				///activity expressed as percentage of maximum function in optimal buffer
+};
+
+///simple class for storing list of vendors in pMolRestrictionEndonuclease
+class pMolRestrictionEndonucleaseVendor : public pMolXMLbase
+{
+  public:
+    pMolRestrictionEndonucleaseVendor();
+    pMolRestrictionEndonucleaseVendor(pMolXMLbase * p_p_MolXMLbaseParent);
+
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual void treeOut(QTreeWidgetItem *tree);
+
+    QString catalogueReference;			///reference number in vendor's catalogue
+};
+
+///stores data for restriction endonuclease activity
+///its getting time to learn how to use the pre-processor to automate all this stuff!
+class pMolRestrictionEndonuclease : public pMolStackObject
+{
+  public:
+    virtual ~pMolRestrictionEndonuclease();
+    pMolRestrictionEndonuclease();
+    pMolRestrictionEndonuclease(pMolXMLbase * p_p_MolXMLbaseParent);
+
+    virtual pMolXMLbase* XMLopen(const QString &tag, QString &error);
+    virtual pMolXMLbase* XMLclose(const QString &tag, const QString &data, QString &error);
+    virtual void treeOut(QTreeWidgetItem *tree);
+    virtual pMolStackObject* exec(pMolCmd* cmd, pMolKernelInterface* interface);
+    virtual bool type(int i);
+
+    pMolStackObject* find(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackObject* cut(pMolCmd* cmd, pMolKernelInterface* interface);
+    pMolStackList* cut(pMolDNA* dna);
+    pMolLayer* find(pMolElement* dna);
+    QString getSequence();
+    short int* getSeqbuff();
+    int getLength();
+
+    QString sourceOrganism;			///source organism of this endonuclease
+    QString reference;				///reference where characterization is described
+    QString recognitionSite;			///the sequence it recognizes
+    int cleavesPositive;			///Leaves left fragment with overhang of
+    int cleavesNegative;			///
+    bool dam;					///dam methylation sensitive
+    bool dcm;					///dcm methylation sensitive
+    bool CpG;					///CpG methylation sensitive
+	
+    QList <pMolRestrictionEndonucleaseBuffer*> buffers;		///list of buffers and activity in each as a percentage of maximal function
+    QList <pMolRestrictionEndonucleaseVendor*> vendors;		///list of vendors available from and their catalogue reference number
+
+  protected:
+    int length;
+    short int *seqbuff;
+    void init();
+    int search(short int* s, short int*r, int I, int slength, int rlength);
+    bool convertToByteHard(const QString &s, short int* buffer);
+    bool convertToByteSoft(const QString &s, short int* buffer);
+    bool convertToByteSoftExternal(const QString &s, short int* buffer);
+
+};
+#endif

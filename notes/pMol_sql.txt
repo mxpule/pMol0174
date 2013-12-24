@@ -1,0 +1,72 @@
+<?14b2398aa8790668c4b34fdbed7e9e4e,1,,XwA0zRNabTzLeLrTFQ115678688383309>
+<https://webmail.pair.com/> <http://www.pair.com/contact/>
+ 
+
+* MySQL Database Administration *
+Add New Database
+Return to Database List
+<?9404fe4fdf14dca1aef21d039256cea7,703,,XwA0zRNabTzLeLrTFQ115678688383309 >
+
+New Database Details
+The MySQL database has been created. Please read over the information
+below, and store the passwords in a safe location. You may also choose
+to change any of the passwords by using the "Change A Password" button
+from the database's detailed view page.
+Main Information
+Database Name: 	mpule2_pMol
+Database Server: 	db87a.pair.com
+Full-Access Username
+This username has full access to database. It is the only username
+allowed to create new tables in the database, or to delete or change
+tables.
+Username: 	mpule2_3
+Password: 	dEcXBZCP
+Read/Write Username
+This username has access to read and write to the database, but can't
+create or drop tables.
+Username: 	mpule2_3_w
+Password: 	a4SzFTDJ
+Read-Only Username
+This username has read-only access to the database.
+Username: 	mpule2_3_r
+Password: 	aS982cBT
+
+Click Here For Detailed View
+<?941e5e3a23b7e8b54239c29dba00de2c,711,mpule2_pMol,XwA0zRNabTzLeLrTFQ115678688383309>
+
+	
+
+
+*User:* 	mpule2
+*Server:* 	kelut
+
+
+Logout
+<?4e10e25bae169f9ebe4b424696604b2f,2,,XwA0zRNabTzLeLrTFQ115678688383309>
+
+» File Manager
+<?df4b9388e6c39ab504e07477d683d5f2,101,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Domain Manager
+<?e682a1db1ff11ec1da468aedc247317b,12,,XwA0zRNabTzLeLrTFQ115678688383309>
+» E-Mail Manager
+<?d8005dbfa632ad32aa32ac68aab14127,66303,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Web Site Statistics
+<?8ee3c02c131808f52b924adf6f63e3b3,16,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Customer Support
+<?24834f2d77ddc3179a5cbaa7a805419a,17,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Billing
+<?61bf22d1d9ef662763c56e8f4a68d114,18,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Advanced Features
+<?f8c39a17c339c31d62210cfbc98fa247,13,,XwA0zRNabTzLeLrTFQ115678688383309>
+» Account Admin
+<?6b17b08f309304563ccb4aaf60dc216b,22,,XwA0zRNabTzLeLrTFQ115678688383309>
+
+» Home
+<?14b2398aa8790668c4b34fdbed7e9e4e,1,,XwA0zRNabTzLeLrTFQ115678688383309>
+» HELP <javascript:popUp('715', 500, 300)>
+
+
+
+<http://www.pair.com/contact/> <http://www.pair.com/policies/>
+	 
+

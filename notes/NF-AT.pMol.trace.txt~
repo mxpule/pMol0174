@@ -1,0 +1,77 @@
+pMol:Obj:>hello, this is pMol version 0.27 -
+pMol:Obj:>let's create something together.
+pMol:Obj:>n:=huNF-ATC1tc1
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>mpSV(n)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>mpSV(n->NF-ATc)
+pMol:Obj:>
+pMol:Obj:>SFG:=SFG.HA1betaTCR_opt-2A-HA1alphaTCR_opt.IRES.dCD34_ngg
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>mpSV(SFG)
+pMol:Obj:>age:=AgeI->find(SFG)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>1
+pMol:Obj:>SFG->add(age->AgeI)
+pMol:Obj:>SFG->save
+pMol:Obj:>SFG.HA1betaTCR_opt-2A-HA1alphaTCR_opt.IRES.dCD34_ngg::save - complete
+pMol:Obj:>XhoI
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>failed to open /home/mxpule/compute/source/pMol0044/pMol/XhoI.pMol
+pMol:Obj:>XhoI
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>xho:=XhoI->find(SFG)
+pMol:Obj:>1
+pMol:Obj:>SFG->add(xho->XhoI)
+pMol:Obj:>SFG5:=SFG->seg(SFG->AgeI,dna('ctagactgcc'))
+pMol:Obj:>SFG3:=SFG->seg(dna('acgcgtacgtcgc'),SFG->XhoI)
+pMol:Obj:>mpSV(SFG3)
+pMol:Obj:>cc:=HomoSapiensCodonCodex
+pMol:Obj:>linker:=cc->code(peptide('sggs'))
+pMol:Obj:>AGCGGCGGCAGC
+pMol:Obj:>mpSV(linker)
+pMol:Obj:>FLAG:=cc->code(peptide('dykddddkg'))
+pMol:Obj:>GACTACAAGGACGACGACGACAAGGGC
+pMol:Obj:>mpSV(FLAG)
+pMol:Obj:>EST:=n->NF-ATc->EST19600411959082
+pMol:Obj:>mpSV(EST)
+pMol:Obj:>NF-ATc_1:=n->NF-ATc->seg(0,dna('ccagtttttccac'))
+pMol:Obj:>NF-ATc_3:=n->NF-ATc->seg(dna('gcaagaccaccc'),dna('cccaccaccgacc'))
+pMol:Obj:>NF-ATc->seg::sequence param 2 not found
+pMol:Obj:>NF-ATc_3:=n->NF-ATc->seg(dna('gcaagaccaccc'),dna('cccaccaccgagcc'))
+pMol:Obj:>h440r:=cc->code(peptide('r'))
+pMol:Obj:>CGG
+pMol:Obj:>NF-ATc_4:=n->NF-ATc->seg(dna('cccaccaccgagcccac'), dna('tgctttttctaa'))
+pMol:Obj:>
+pMol:Obj:>NF-ATc->exec::command 'deg' not understood
+pMol:Obj:>
+pMol:Obj:>NF-ATc_1b:=n->NF-ATc->seg(3,dna('ccagtttttccac'))
+pMol:Obj:>fuse1:=pcr->fuse(SFG5,FLAG,linker,NF-ATc_1b,EST,NF-ATc_3,h440r,NF-ATc_4,SFG3)
+pMol:Obj:>not found in namespace, trying to load from disk...
+pMol:Obj:>loading XML succeeded
+pMol:Obj:>CCCTTGTAAACTTCCCTGACCCTGACATG
+pMol:Obj:>GCCCTTGTCGTCGTCGTCCTTGTAGTCGGCAGTCTAGAGGATGGTCCACCC
+pMol:Obj:>
+pMol:Obj:>CAAGGACGACGACGACAAGGGCAGCGGCGGCAGCCCAAGCACCAGCTTTCCAGTCCC
+pMol:Obj:>CACCTCCACATCGTGGAAAAACTGGTTATTGTTGTGGTACAGGC
+pMol:Obj:>
+pMol:Obj:>ACCAGTTTTTCCACGATGTGGAGGTGGAAGACGTCCTCC
+pMol:Obj:>GTGGTCTTGCGGGTGGTCTTGCGGGACTTGAC
+pMol:Obj:>
+pMol:Obj:>GCAAGACCACCCGCAAGACCACCCTGGAGCAGCC
+pMol:Obj:>TGGTGGGCCGGGCTCGGTGGTGGGACTTGGGC
+pMol:Obj:>
+pMol:Obj:>CACCACCGAGCCCGGCCCACCACCGAGCCCACTACGA
+pMol:Obj:>CTCGAGCTCTGTACATGTCCGCGGTCGCGACGTACGCGTTTAGAAAAAGCACCCCACGCGCT
+pMol:Obj:>mpSV(fuse1)
+pMol:Obj:>mpSV(SFG3)
+pMol:Obj:>orfs:=cc->findORFs(fuse1,1400)
+pMol:Obj:>orfs:=cc->findORFs(fuse1,1100)
+pMol:Obj:>HomoSapiensCodonCodex::findORFs found at: ATGAAGTCAGCGGAGGAAGAACACTATGGCTATGCATCCTCCAACGTC
+pMol:Obj:>mpSV(orfs)
+pMol:Obj:>

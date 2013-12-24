@@ -1,0 +1,17 @@
+ New Database Details
+The MySQL database has been created. Please read over the information below, and store the passwords in a safe location. You may also choose to change any of the passwords by using the "Change A Password" button from the database's detailed view page.
+Main Information
+Database Name: 	mpule2_pMol
+Database Server: 	db87a.pair.com
+Full-Access Username
+This username has full access to database. It is the only username allowed to create new tables in the database, or to delete or change tables.
+Username: 	mpule2_3
+Password: 	dEcXBZCP
+Read/Write Username
+This username has access to read and write to the database, but can't create or drop tables.
+Username: 	mpule2_3_w
+Password: 	a4SzFTDJ
+Read-Only Username
+This username has read-only access to the database.
+Username: 	mpule2_3_r
+Password: 	aS982cBT
