@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
+/*
 
 #include "./pLabTools/pLabConstructionTraceTab.h"
 
@@ -99,3 +99,4 @@ void pLabConstructionTraceTab::addTraceItem(const QString &stamp, const QString 
   qDebug() << "whats going on31?" << stamp << text << traceText;
 };
 
+*/

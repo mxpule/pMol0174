@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
+/*
 #include <QtGui>
 #include <QtSql>
 
@@ -72,7 +72,7 @@ pLabBoxEntry::pLabBoxEntry(pMolKernelInterface* p_interface)
   connect(vectorCombo, SIGNAL(editTextChanged(const QString &)),
             this, SLOT(vectorComboChanged(const QString &)));
 */
-
+/*
   connect(boxtype, SIGNAL(currentIndexChanged(int)),
             this, SLOT(somethingChanged(int)));
 
@@ -259,3 +259,4 @@ pLabBoxEntry* pLabBoxEntry::create(pMolKernelInterface* interface, pMolCmd* cmd)
   entry->show();
   return entry;
 };
+*/

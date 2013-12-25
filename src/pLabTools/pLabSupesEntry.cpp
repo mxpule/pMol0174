@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #include <QtGui>
 #include <QtSql>
 
@@ -64,7 +65,7 @@ pLabSupesEntry::pLabSupesEntry(pMolKernelInterface* p_interface)
   connect(vectorCombo, SIGNAL(editTextChanged(const QString &)),
             this, SLOT(vectorComboChanged(const QString &)));
 */
-
+/*
   connect(vectorCombo, SIGNAL(activated(int)),
             this, SLOT(vectorComboActivated(int)));
 
@@ -254,3 +255,4 @@ pLabSupesEntry* pLabSupesEntry::create(pMolKernelInterface* interface, pMolCmd* 
   entry->show();
   return entry;
 };
+*/

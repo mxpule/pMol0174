@@ -100,64 +100,29 @@ bool pMolElement::saveContents(QTextStream* stream)
 QString pMolElement::cleanString(const QString &s)
 {
   QString c = "";
-
+  QString bases = "cgatrykmswnbvdh";
   for (int i=0; i<s.length(); i++)
   {
-    char x = s.at(i).toLower().toAscii(); 
-    switch (x)
-    { 
-      case 'c' : c+= "c"; break;
-      case 'g' : c+= "g"; break;
-      case 'a' : c+= "a"; break;
-      case 't' : c+= "t"; break;
-      case 'r' : c+= "r"; break;
-      case 'y' : c+= "y"; break;
-      case 'k' : c+= "k"; break;
-      case 'm' : c+= "m"; break;
-      case 's' : c+= "s"; break;
-      case 'w' : c+= "w"; break;
-      case 'n' : c+= "n"; break;
-      case 'b' : c+= "b"; break;
-      case 'v' : c+= "v"; break;
-      case 'd' : c+= "d"; break;
-      case 'h' : c+= "h"; break;
-      default : c+= "";
-    };
-  };
+    QChar x = s.at(i).toLower();
+    if (bases.indexOf(x)>=0) c+= x;
+  }
   return c.toUpper();
 }
 
 QString pMolElement::complementString(const QString &s)
 {
    QString c = "";
+   QString bases = "cgatrykmswnbvdh";
+   QString complement = "gctayrmkswnvbhd";
+
    for (int i=s.length()-1; i>=0; i--)
    {
-      char x = s.at(i).toLower().toAscii(); 
-   //  qDebug()<< "getComplement()" << i << x << c;
-         switch (x)
-         { 
-           case 'c' : c+= "g"; break;
-           case 'g' : c+= "c"; break;
-    	   case 'a' : c+= "t"; break;
-    	   case 't' : c+= "a"; break;
-    	   case 'r' : c+= "y"; break;
-    	   case 'y' : c+= "r"; break;
-    	   case 'k' : c+= "m"; break;
-    	   case 'm' : c+= "k"; break;
-    	   case 's' : c+= "s"; break;
-    	   case 'w' : c+= "w"; break;
-    	   case 'n' : c+= "n"; break;
-    	   case 'b' : c+= "v"; break;
-    	   case 'v' : c+= "b"; break;
-    	   case 'd' : c+= "h"; break;
-    	   case 'h' : c+= "d"; break;
-           default : c+= "?";
-       };
- 
-     };
-     qDebug() << "complent" << s << c;
-      return c.toUpper();
-  };
+     QChar x = s.at(i).toLower();
+     int j = bases.indexOf(x);
+     if (j>=0) c+= complement.at(j); else c+= "?";
+   }
+   return c.toUpper();
+}
 
 //------------------------------------------------------------------------------------------------------------------
 /// returns appropriate sequence segment of the DNA sequence.

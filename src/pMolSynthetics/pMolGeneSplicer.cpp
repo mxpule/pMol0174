@@ -249,10 +249,11 @@ bool pMolGeneSplicer::findSplicing(const QString &sequence)
   Cap=List;
 
   Data_Len = sequence.length();
-  char* Data = new char[Data_Len];
+  char* Data = sequence.toLocal8Bit().data();
+  //char* Data = new char[Data_Len];
 
-  for  (i = 0;  i < Data_Len;  i ++) 
-    Data[i] = Filter(sequence.at(i).toAscii());
+  //for  (i = 0;  i < Data_Len;  i ++)
+  //  Data[i] = Filter(sequence.at(i).toAscii());
 
 
   for  (i = 80;  i <= Data_Len-82;  i ++) 

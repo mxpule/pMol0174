@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
+/*
 #ifndef PLABRECTTEXTITEM_H
 #define PLABRECTTEXTITEM_H
 
@@ -46,3 +46,4 @@ class pLabRectTextItem : public QGraphicsItem
  };
 
 #endif
+*/

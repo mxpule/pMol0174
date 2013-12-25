@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
+
 #include "pLabTools/pLabFreezerBox.h"
 #include "pLabTools/pLabToolsFinderSlot.h"
 
@@ -37,5 +39,7 @@ pLabToolsFinderSlot::pLabToolsFinderSlot(pMolKernelInterface* p_interface,QTreeW
 void pLabToolsFinderSlot::doubleClicked(int column)
 {
   if (boxNumber < 1) return;
-  pLabFreezerBox* box = new pLabFreezerBox(interface, boxNumber, ixix);
+  //pLabFreezerBox* box = new pLabFreezerBox(interface, boxNumber, ixix);
 };
+
+*/

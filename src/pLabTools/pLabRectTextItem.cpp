@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
- 
+/*
 
 #include "./pLabTools/pLabRectTextItem.h"
 
@@ -51,3 +51,5 @@ void pLabRectTextItem::create(QGraphicsScene* scene, int x, int y, int w, int h,
   item->setPos(x,y);
   scene->addItem(item);
 };
+
+*/

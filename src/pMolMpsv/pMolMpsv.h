@@ -23,6 +23,7 @@
 
 #include <QtGui>
 #include <QMutex>
+#include <QGraphicsView>
 
 #include "pMolStackObject.h"
 #include "pMolMpsv/pMolMpsvWrapper.h"

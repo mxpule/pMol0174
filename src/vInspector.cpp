@@ -18,10 +18,12 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <QtGui>
+#include <QHeaderView>
 #include "vInspector.h"
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
+
 #endif
 
 vInspector::vInspector(pMolObject* object) :  QObject(), pMolStackObject()
@@ -33,7 +35,7 @@ vInspector::vInspector(pMolObject* object) :  QObject(), pMolStackObject()
    QStringList labels;
    labels << "name" << "value";
    treeWidget->setColumnCount(2);
-   treeWidget->header()->setResizeMode(QHeaderView::Stretch);
+   treeWidget->header()->setSectionResizeMode(QHeaderView::Stretch);
    treeWidget->setHeaderLabels(labels);
    treeWidget->setWindowTitle(object->name);
 

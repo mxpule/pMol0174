@@ -23,8 +23,6 @@
 int pMolLanguageEngine::getCue(QString* cmdStr)
 {
   while (cmdStr->startsWith(" ")) cmdStr->remove(0,1);			// trim any white space
-  qDebug() << "about to cue" << cmdStr->toAscii();
-  qDebug() << "length" << cmdStr->length();
   if (cmdStr->length()==0)      	return CUE_EMPTY;		// string finished
   if (cmdStr->startsWith(";"))  	return CUE_TERM;		// semi-colon indicates end of input
   if (cmdStr->startsWith("("))  	return CUE_OPEN_ROUND;			
@@ -44,7 +42,6 @@ int pMolLanguageEngine::getCue(QString* cmdStr)
 QString pMolLanguageEngine::getNext(QString *cmdStr)
 {
   int j, i = cmdStr->length();
-  qDebug() << "about to cut" << cmdStr->toAscii();
   j=cmdStr->indexOf("(");  if ((j>0) && (j<i)) i = j;
   j=cmdStr->indexOf(")");  if ((j>0) && (j<i)) i = j;
   j=cmdStr->indexOf(",");  if ((j>0) && (j<i)) i = j;
@@ -95,7 +92,6 @@ pMolCmd* pMolLanguageEngine::parseNumber(QString* cmdStr)
 ///parses a name object and goes forward fromparseName(cmdStr) there
 pMolCmd* pMolLanguageEngine::parseName(QString* cmdStr)
 {
-  qDebug() << "parseName" << cmdStr->toAscii();
   pMolCmdName* name = new pMolCmdName(getNext(cmdStr));			// make a container for the name
   name->child = parsePostName(cmdStr);					// go forward
   if (name->child==NULL) return (pMolCmd*) name;			// end of the input reached
@@ -144,14 +140,12 @@ pMolCmd* pMolLanguageEngine::parseList(QString *cmdStr)
   int code = getCue(cmdStr); 						// get what the next bit of input is
   pMolCmdList* list = new pMolCmdList();
  
-  qDebug() << "parseList" << cmdStr->toAscii();
 
   while (code!=CUE_CLOSE_ROUND)
   {
     pMolCmd* next = parse(cmdStr);
     if (next==NULL) return parseError("terminated before list end", cmdStr);
     if (next->type()==pMolCmd::ERROR) return next;
-    qDebug() << "parseList-in loop" << cmdStr->toAscii();
 
     list->append(next);
 

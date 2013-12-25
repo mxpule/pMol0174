@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #include "pLabToolsSlotWidget.h"
 
 pLabToolsSlotWidget::pLabToolsSlotWidget(const QString &p_slot, int p_radius, pMolInterface* p_parent)
@@ -149,3 +150,4 @@ void pLabToolsSlotWidget::mousePressEvent(QMouseEvent *event)
   changed = true;
   update();
 };
+*/

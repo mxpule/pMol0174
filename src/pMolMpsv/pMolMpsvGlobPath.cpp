@@ -75,15 +75,15 @@ void pMolMpsvGlobPath::bind(pMolMpsvGlob* parent)
 
     if (glob->getDir() > 0)
     { 
-      glob->translate(glob->getX(), -y);		//positive direction, so simply
+      glob->moveBy(glob->getX(), -y);		//positive direction, so simply
     //  parent->addToGroup(glob);				//transform by y and register parent
       glob->setParentItem(parent);
       glob->compact();
     }
     else
     {
-      glob->rotate(180);
-      glob->translate(-glob->getX(), -y);
+      glob->setRotation(180);
+      glob->moveBy(-glob->getX(), -y);
       //parent->addToGroup(glob);
       glob->setParentItem(parent);
       glob->compact();

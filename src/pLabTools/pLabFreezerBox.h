@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
+
 #ifndef PMOLBOX_H
 #define PMOLBOX_H
 
@@ -29,6 +31,7 @@
 #include "pMolKernelInterface.h"
 #include "pMolStackObject.h"
 #include "pLabTools/pLabToolsSlotWidget.h"
+
 
 class pLabFreezerBox : public QWidget, public pMolObject, public pMolInterface
 {
@@ -86,3 +89,4 @@ class pLabFreezerBox : public QWidget, public pMolObject, public pMolInterface
 
 
 #endif
+*/

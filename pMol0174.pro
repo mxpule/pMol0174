@@ -211,6 +211,7 @@ INCLUDEPATH += /home/mxpule/source/pMol0174/src \
            src/pMolSql \
            src/pLabTools
 QT +=sql
+QT +=printsupport
 QT += opengl \
  xml \
  script \

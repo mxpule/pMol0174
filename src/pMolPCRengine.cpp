@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <ctime> 
 #include <cstdlib>
+#include <QApplication>
 
 #include "pMolPCRengine.h"
 

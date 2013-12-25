@@ -2,6 +2,7 @@
 #define PMOLMPSVGLOBSEQUENCE_H
 
 #include <QGraphicsScene>
+#include <QtGui/QGraphicsTextItem>
 
 #include "pMolMpsv/pMolMpsvWrap.h"
 

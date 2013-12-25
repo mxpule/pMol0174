@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
+
 #include "./pLabTools/pLabConstructionTrace.h"
 #include "./pLabTools/pLabConstructionOverviewSlot.h"
 
@@ -39,7 +41,8 @@ void pLabConstructionOverviewSlot::doubleClicked(int column)
 {
   if (constructionIx < 1) return;
   qDebug() << "here we are" << constructionGroupIx << constructionIx;
-  pLabConstructionTrace* trace = new pLabConstructionTrace(interface, constructionGroupIx);
+  //pLabConstructionTrace* trace = new pLabConstructionTrace(interface, constructionGroupIx);
 
-  trace->show();
+ // trace->show();
 };
+*/

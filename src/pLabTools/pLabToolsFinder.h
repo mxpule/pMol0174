@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #ifndef PLABTOOLSFINDER_H
 #define PLABTOOLSFINDER_H
 
@@ -52,7 +53,7 @@ public slots:
     void inputMaskChanged(int);
     void accessChanged(int);
 */
-
+/*
 private:
     void searchSql(const QString &p_sql);
 
@@ -64,3 +65,4 @@ private:
 };
 
 #endif
+*/

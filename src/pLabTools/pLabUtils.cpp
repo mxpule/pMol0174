@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #include "pLabTools/pLabUtils.h"
 
 #include <QtGui>
@@ -279,3 +280,4 @@ QString pLabUtils::getSqlDetails(const QSqlQuery &query, int type)
 
   throw pMolError("pLabUtils::getSqlDetails - unknown sample type");
 };
+*/

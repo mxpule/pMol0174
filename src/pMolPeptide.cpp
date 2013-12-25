@@ -29,35 +29,12 @@ pMolPeptide::pMolPeptide(pMolXMLbase *p_pMolXMLbaseParent) : pMolStackObject(p_p
 QString pMolPeptide::cleanString(const QString &s)
 {
   QString c = "";
+  QString aminoacids = "acdefghiklmnpqrstvwy?";
 
   for (int i=0; i<s.length(); i++)
   {
-    char x = s.at(i).toLower().toAscii(); 
-    switch (x)
-    { 
-      case 'a' : c+= "a"; break;		//Alanine  ALA`
-      case 'c' : c+= "c"; break;		//Cysteine CYS
-      case 'd' : c+= "d"; break;		//Aspartic acid ASP
-      case 'e' : c+= "e"; break;		//Glutamic acid GLU
-      case 'f' : c+= "f"; break;		//
-      case 'g' : c+= "g"; break;
-      case 'h' : c+= "h"; break;
-      case 'i' : c+= "i"; break;
-      case 'k' : c+= "k"; break;
-      case 'l' : c+= "l"; break;
-      case 'm' : c+= "m"; break;
-      case 'n' : c+= "n"; break;
-      case 'p' : c+= "p"; break;
-      case 'q' : c+= "q"; break;
-      case 'r' : c+= "r"; break;
-      case 's' : c+= "s"; break;
-      case 't' : c+= "t"; break;
-      case 'v' : c+= "v"; break;
-      case 'w' : c+= "w"; break;
-      case 'y' : c+= "y"; break;
-      case '?' : c+= "?"; break;
-      default : c+= "";
-    };
+    QChar x = s.at(i).toLower();
+    if (aminoacids.indexOf(x)>=0) c+=x;
   };
   return c.toUpper();
 }

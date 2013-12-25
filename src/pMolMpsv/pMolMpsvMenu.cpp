@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <QMenu>
 #include "pMolMpsv/pMolMpsvMenu.h"
 
 pMolMpsvMenu::pMolMpsvMenu(pMolMpsvWrapper_orf* p_parent)

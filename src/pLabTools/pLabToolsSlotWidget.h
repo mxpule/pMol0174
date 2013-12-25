@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #ifndef PLABTOOLSSLOTWIDGET_H
 #define PLABTOOLSSLOTWIDGET_H
 
@@ -55,3 +56,4 @@ class pLabToolsSlotWidget  : public QWidget
 };
 
 #endif
+*/

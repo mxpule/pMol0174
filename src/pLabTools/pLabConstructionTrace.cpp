@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
 #include <QtGui>
 #include <QtSql>
 
@@ -321,7 +322,7 @@ void pLabConstructionTrace::allocateButtonClicked(bool)
 
 };
 */
-
+/*
 //---------------------------------------------------------
 ///
 
@@ -335,7 +336,7 @@ void pLabConstructionTrace::tabberChanged(int t)
 };
 */
 
-
+/*
 void pLabConstructionTrace::tabChanged(int p_tab)
 {
   tab = p_tab;
@@ -366,3 +367,4 @@ pMolStackObject* pLabConstructionTrace::create(pMolKernelInterface* interface, p
   qDebug() << "shown@";
   return entry;
 };
+?*/

@@ -93,7 +93,7 @@ void RenderObjectContainer::addRenderObject(RenderObject* object)
        object->translate(0,y0-y1-h1);
     };
 
-  rect = rect.unite(object->rect.translated(basex,basey));		//merge this new box with outline of parent
+  rect = rect.united(object->rect.translated(basex,basey));		//merge this new box with outline of parent
 
   renderObjects.append(object);						//add it to our list.
 }

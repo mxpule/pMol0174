@@ -93,6 +93,7 @@
 
 
 #include <QString>
+#include <QScrollBar>
 #include <QtGui>
 
 /* ---- Imports ---- */
@@ -136,7 +137,9 @@ header_fudge = 0;
     setWindowTitle(fileName);
 //    badnessHighlighted = true;
 
-  data = read_abi(fileName.toAscii().data());
+  //char charFileName[256];
+  //QString fileNameSafe = fileName.left(256);
+  data = read_abi(fileName.toLocal8Bit().data());
   if (data==NULL) qDebug() << "NULL";
   else
   {

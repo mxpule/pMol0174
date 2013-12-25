@@ -72,24 +72,22 @@ pMolSynthFlatArray::pMolSynthFlatArray(pMolStackList* list)
 
     for (int i=0; i<seq.length(); i++)			//loop through the characters and flatten
     {
-      char c = seq.at(i).toLower().toAscii(); 		//make it flat
-      switch (c)
-      { 
-        case 'a'	 : array[index++] = 0; break;	//
-      	case 't'	 : array[index++] = 1; break;	//
-        case 'c'	 : array[index++] = 2; break;	//
-     	case 'g'	 : array[index++] = 3; break;	//
-        default	 : 				//funny base found
-        { delete []array;				//note, degenerate bases not yet supported
+      QChar c = seq.at(i).toLower(); 		//make it flat
+      if (c=='a') array[index++] = 0;
+      else if (c=='t') array[index++] = 1;
+      else if (c=='c') array[index++] = 2;
+      else if (c=='g') array[index++] = 3;
+      else				//funny base found
+       { delete []array;				//note, degenerate bases not yet supported
           delete []indices;				//clean up
           throw pMolError("pMolSynthFlatArray::pMolSynthFlatArray - not a,c,g or t base in forbidden");
-        };
-      };
+       };
+
     };
     array[index++] = 4;					//stop signal
   };
   for (int i = 0; i<length; i++) qDebug() << array[i];
-};
+}
 
 
 pMolSynthFlatArray::~pMolSynthFlatArray()

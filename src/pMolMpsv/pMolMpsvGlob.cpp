@@ -20,6 +20,7 @@
 
 #include <cstdlib>
 #include <QGraphicsSimpleTextItem>
+#include <QGraphicsItem>
 #include "pMolMpsv/pMolMpsvGlob.h"
 #include "pMolMpsv/pMolMpsvGlobPath.h"
 
@@ -213,7 +214,8 @@ void pMolMpsvGlob::compact()
 void pMolMpsvGlob::normalize()
 {
   float y = mask->normalize();		//normalize the mask and get y offset to do this
-  translate(0.0, y);			//translate by the appropriate amount
+//  translate(0.0, y);			//translate by the appropriate amount
+  moveBy(0.0, y);
 };
 
 //---------------------------------------------------------------------------------------

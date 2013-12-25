@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include "pMolNameSpace.h"
 #include <QtSql>
+#include <QtGui/QMessageBox>
 
 #include "pLabTools/pLabFreezerBox.h"
 #include "pMolBatch.h"
@@ -323,22 +324,6 @@ pMolStackObject* pMolNameSpace::exec(pMolCmdName* cmd)
     return NULL;
   };
 
-  if (cmd->name == "box")
-  { return pLabBoxEntry::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "track")
-  { //pLabConstructionOverview* over = new pLabConstructionOverview();
-//    return over;
-    return pLabConstructionOverview::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "construct")
-  { return pLabConstruction::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "trace")
-    return pLabConstructionTrace::create(interface, cmd->child);
 
   if (cmd->name == "primerOrder")
   { return pMolPrimerOrder::create(interface, cmd->child);
@@ -348,26 +333,6 @@ pMolStackObject* pMolNameSpace::exec(pMolCmdName* cmd)
   { //foreach (pMolObject* object, hashTable) delete object;
     hashTable.clear();
     return NULL;
-  };
-
-  if (cmd->name == "finder")
-  { //foreach (pMolObject* object, hashTable) delete object;
-    return pLabToolsFinder::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "plasmid")
-  { //foreach (pMolObject* object, hashTable) delete object;
-    return pLabPlasmidEntry::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "supes")
-  { //foreach (pMolObject* object, hashTable) delete object;
-    return pLabSupesEntry::create(interface, cmd->child);
-  };
-
-  if (cmd->name == "cell")
-  { //foreach (pMolObject* object, hashTable) delete object;
-    return pLabCellEntry::create(interface, cmd->child);
   };
 
   //if (cmd->name == "facs3DPlot")

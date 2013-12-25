@@ -1,3 +1,5 @@
+#include <QGraphicsTextItem>
+#include <QGraphicsSceneMouseEvent>
 
 #include "pMolMpsv/pMolMpsvGlobSequence.h"
 
@@ -17,4 +19,4 @@ void pMolMpsvGlobSequence::mousePressEvent(QGraphicsSceneMouseEvent *event)
   int x = event->pos().x();
   x = 16*x/fm.width("cagtcagtcagtcagt");
   parentWrapper->userEvent(0x001, index+x);
-};
+}

@@ -19,7 +19,8 @@
  ***************************************************************************/
 
 #include <QPrinter>
-
+#include <QWidget>
+#include <QGraphicsView>
 #include "pMolMpsv.h"
 
 //------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ void pMolMpsv::makeGlobs()
       scene.addItem(glob);
       globs.append(glob);
       y+=(glob->getBoundingRect()->height() + delta_y);
-      glob->translate(sideMargin,y);
+      glob->moveBy(sideMargin,y);
 
     //if ((grey++) & 1) glob->setBackGround(lightGray);
     };
@@ -174,7 +175,7 @@ pMolStackObject* pMolMpsv::c_pdf(pMolCmd* cmd, pMolKernelInterface* interface)
 
   QPrinter printer;
   printer.setPageSize(QPrinter::A4);
-  printer.setOutputFormat(QPrinter::PostScriptFormat);
+  printer.setOutputFormat(QPrinter::PdfFormat);
   printer.setOutputFileName(filename+".pdf");
   QPainter painter(&printer);
   scene.render(&painter);

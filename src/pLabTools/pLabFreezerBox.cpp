@@ -25,7 +25,7 @@
 #include "pLabTools/pLabUtils.h"
 #include "pLabTools/pLabFreezerBox.h"
 #include "pLabTools/pLabToolsSlotWidget.h"
-
+/*
 
 
 //--------------------------------------------------------------------------------
@@ -517,3 +517,4 @@ pMolStackObject* pLabFreezerBox::create(pMolKernelInterface* interface, pMolCmd*
   return NULL;
 };
 
+*/

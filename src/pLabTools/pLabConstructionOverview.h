@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ************************************************************************/
-
+/*
 #ifndef PLABCONSTRUCTIONOVERVIEW_H
 #define PLABCONSTRUCTIONOVERVIEW_H
 
@@ -60,3 +60,4 @@ class pLabConstructionOverview : public QWidget, public pMolStackObject
 };
 
 #endif
+*/
